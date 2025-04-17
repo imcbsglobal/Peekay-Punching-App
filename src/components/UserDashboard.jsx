@@ -16,7 +16,7 @@ const UserDashboard = () => {
         </div>
         <div className="text-[#fff] font-semibold mb-10">Hi, Sajith Thomas</div>
         <div className="mb-20">
-            <button className="px-10 py-2 rounded-3xl bg-[#fff] font-bold cursor-pointer">Punch In</button>
+            <a href="/PunchInDashboard"><button className="px-10 py-2 rounded-3xl bg-[#fff] font-bold cursor-pointer">Punch In</button></a>
         </div>
         <div>
             <button className="px-10 py-2 rounded-3xl bg-[#fff] font-bold cursor-pointer">Exit</button>
