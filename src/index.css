@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'GooD Timing';
+  src: url('src/fonts/Good\ Times\ Rg.otf');
+}
+
+body{
+  background-color: #2c2d2f;
+}
+.IntroFont{
+  font-family: 'GooD Timing';
+}
+.logoAnim{
+  transition: all 2s ease-in-out;
+  animation: logoAnim 1.5s;
+}
+@keyframes logoAnim {
+  0%{
+    transform: translateY(-300%);
+  }
+  50%{
+    transform: translateY(300%);
+  }
+  100%{
+    transform: translateY(0%);
+  }
+}
