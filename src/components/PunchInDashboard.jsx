@@ -117,7 +117,7 @@ const PunchInDashboard = () => {
         {/* Camera Modal */}
         {showCamera && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-            <div className="bg-gray-800 p-4 rounded-lg w-full max-w-md relative">
+            <div className="bg-gray-800 p-4 rounded-lg w-full relative h-[100vh]">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-white text-lg font-medium">
                   {facingMode === "user" ? "Front Camera" : "Back Camera"}
@@ -145,16 +145,16 @@ const PunchInDashboard = () => {
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-64 object-contain bg-black rounded-lg"
+                className="w-full h-full object-cover bg-black rounded-lg"
                 style={{
                   transform: facingMode === "user" ? "scaleX(-1)" : "none",
                 }}
               />
 
-              <div className="mt-4 flex justify-center">
+              <div className=" flex justify-center">
                 <button
                   onClick={capturePhoto}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 flex items-center gap-2"
+                  className="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 flex items-center gap-2 absolute z-50 bottom-10"
                 >
                   <LuCamera /> Capture
                 </button>
