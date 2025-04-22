@@ -9,7 +9,7 @@ const Intro = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate("/getLicense");
+      navigate("/login");
     }, 3500); // 3 seconds
 
     return () => clearTimeout(timer); // cleanup
