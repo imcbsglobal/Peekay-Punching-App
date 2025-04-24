@@ -48,7 +48,7 @@ const UsersList = () => {
         Users
       </div>
 
-      <div className="grid md:grid-cols-12 mb-5 items-center">
+      <div className="grid w-full md:grid-cols-12 justify-between items-center mb-5">
         <div className="flex justify-center col-span-9 w-full">
           <input
             type="text"
@@ -58,10 +58,10 @@ const UsersList = () => {
               setSearchQuery(e.target.value);
               setCurrentPage(1); // Reset to page 1 when searching
             }}
-            className="p-2 w-full rounded-md bg-gray-700 text-white border border-gray-600"
+            className="p-2 w-full rounded-md bg-gray-700 text-sm lg:text-base text-white border border-gray-600"
           />
         </div>
-        <div className="flex justify-center gap-4 w-full col-span-3">
+        <div className="flex justify-center gap-4 col-span-3 w-full">
           <button
             onClick={handlePrevious}
             disabled={currentPage === 1}
@@ -73,7 +73,7 @@ const UsersList = () => {
           >
             Previous
           </button>
-          <span className="text-white self-center">
+          <span className="text-white self-center text-xs">
             Page {currentPage} of {totalPages}
           </span>
           <button
