@@ -190,7 +190,7 @@ const PunchInDashboard = () => {
       
       // For now, we can use a placeholder URL pattern that includes identifying info
       // This isn't a real URL but gives you a structured string that can be used like one
-      const photoUrl = `app://local-storage/punch-images/${punchId}_${timestamp}.jpg`;
+      const photoUrl = `user_images/${punchId}_${timestamp}.jpg`;
 
       const punchOutData = {
         id: punchId,
