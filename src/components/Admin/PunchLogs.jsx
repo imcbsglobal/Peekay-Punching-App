@@ -53,14 +53,14 @@ const PunchLogs = () => {
   const [records, setRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
+  const recordsPerPage = 5;
 
   useEffect(() => {
     const fetchPunchRecords = async () => {
       try {
         const data = await getPunchRecords();
         setRecords(data.data);
-        console.log(data.data);
+        console.log("data is",data.data);
       } catch (error) {
         console.error("Error fetching punch records:", error.message);
       }
@@ -187,11 +187,21 @@ const PunchLogs = () => {
                 </td>
 
                 <td className="px-6 py-4">
+                {record.photo_filename ? (
                   <img
-                    src={record.photo}
+                    src={`https://peekayuser.imcbs.com/uploads/${record.photo_filename}`}
                     alt="Punch"
                     className="rounded-full border border-cyan-500 shadow-md w-10 h-10 object-cover"
+                    onError={(e) => {
+                      console.error(`Failed to load image: ${record.photo_filename}`);
+                      e.target.src = expired; // Your fallback image
+                      e.target.onerror = null; // Prevent infinite error loop
+                    }}
                   />
+                ) : (
+                  <span className="text-gray-400">No photo</span>
+                )}
+
                 </td>
               </tr>
             ))}
