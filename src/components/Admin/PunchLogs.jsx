@@ -60,12 +60,13 @@ const PunchLogs = () => {
       try {
         const data = await getPunchRecords();
         setRecords(data.data);
-        console.log("data is",data.data);
+        // Debug logging
+        console.log("Photo filenames:", data.data.map(record => record.photo_filename));
       } catch (error) {
         console.error("Error fetching punch records:", error.message);
       }
     };
-
+  
     fetchPunchRecords();
   }, []);
 
@@ -187,21 +188,22 @@ const PunchLogs = () => {
                 </td>
 
                 <td className="px-6 py-4">
-                {record.photo_filename ? (
-                  <img
-                    src={`https://peekayuser.imcbs.com/uploads/${record.photo_filename}`}
-                    alt="Punch"
-                    className="rounded-full border border-cyan-500 shadow-md w-10 h-10 object-cover"
-                    onError={(e) => {
-                      console.error(`Failed to load image: ${record.photo_filename}`);
-                      e.target.src = expired; // Your fallback image
-                      e.target.onerror = null; // Prevent infinite error loop
-                    }}
-                  />
-                ) : (
-                  <span className="text-gray-400">No photo</span>
-                )}
-
+                  {record.photo_filename ? (
+                    <img
+                      src={`/uploads/${record.photo_filename}`}
+                      alt="Punch"
+                      className="rounded-full border border-cyan-500 shadow-md w-10 h-10 object-cover"
+                      onError={(e) => {
+                        console.error(`Failed to load image: ${record.photo_filename}`);
+                        // Try to log the full URL that failed
+                        console.error(`Full URL that failed: ${e.target.src}`);
+                        e.target.src = expired;
+                        e.target.onerror = null;
+                      }}
+                    />
+                  ) : (
+                    <span className="text-gray-400">No photo</span>
+                  )}
                 </td>
               </tr>
             ))}
