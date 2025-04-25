@@ -190,7 +190,7 @@ const PunchLogs = () => {
                 <td className="px-6 py-4">
                   {record.photo_filename ? (
                     <img
-                      src={record.photo_filename}
+                    src={`https://peekayuser.imcbs.com/uploads/${record.photo_filename}`}
                       alt="Punch"
                       className="rounded-full border border-cyan-500 shadow-md w-10 h-10 object-cover"
                       onError={(e) => {
