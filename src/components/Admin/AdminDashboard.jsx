@@ -126,7 +126,7 @@ const AdminDashboard = () => {
               <ul className="flex flex-col w-full gap-4 px-10 text-lg font-semibold text-white">
                 <button
                   onClick={() => setActiveTab("punchLogs")}
-                  className="flex items-center justify-start gap-2 cursor-pointer"
+                  className={`flex items-center justify-start gap-2 cursor-pointer ${activeTab === "punchLogs" ? "text-[#EEB31B] transition-all duration-300" : ""}`}
                 >
                   <GrFingerPrint />
                   <span>Punch Logs</span>
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
 
                 <button
                   onClick={() => setActiveTab("users")}
-                  className="flex items-center justify-start gap-2 cursor-pointer"
+                  className={`flex items-center justify-start gap-2 cursor-pointer ${activeTab === "users" ? "text-[#EEB31B] transition-all duration-300" : "" }`}
                 >
                   <FaUser />
                   <span>Users</span>
@@ -142,7 +142,7 @@ const AdminDashboard = () => {
 
                 <button
                   onClick={() => setActiveTab("customers")}
-                  className="flex items-center justify-start gap-2 cursor-pointer"
+                  className={`flex items-center justify-start gap-2 cursor-pointer ${activeTab === "customers" ? "text-[#EEB31B] transition-all duration-300" : "" }`}
                 >
                   <HiUsers />
                   <span>Customers</span>
