@@ -19,6 +19,33 @@ const PunchInDashboard = () => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredCustomers = customers.filter((customer) =>
+    (customer.name || customer.customerName || "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+
+
+
+  useEffect(() => {
+    const handleBack = (e) => {
+      e.preventDefault();
+      window.history.pushState(null, "", window.location.href);
+    };
+  
+    // Disable back button navigation
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handleBack);
+  
+    return () => {
+      window.removeEventListener("popstate", handleBack);
+    };
+  }, []);
+  
 
   // Fetch customers and current punch data on component mount
   useEffect(() => {
@@ -67,6 +94,18 @@ const PunchInDashboard = () => {
 
     fetchCustomers();
   }, [navigate]);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".relative")) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  
 
   // Start camera when showCamera becomes true
   useEffect(() => {
@@ -230,149 +269,201 @@ const PunchInDashboard = () => {
   return (
     <div className="overflow-x-hidden h-screen">
       <div className="flex items-center justify-between pt-5">
-        <a href="/userDashboard" className="text-white hidden text-3xl cursor-pointer">
+        <a
+          href="/userDashboard"
+          className="text-white hidden text-3xl cursor-pointer"
+        >
           <FaAngleLeft />
         </a>
-        <div onClick={handleLogout} className="text-white text-3xl hidden cursor-pointer">
+        <div
+          onClick={handleLogout}
+          className="text-white text-3xl hidden cursor-pointer"
+        >
           <RiLogoutBoxLine />
         </div>
       </div>
 
       <div className="px-2">
-      <div className="flex px-2 flex-col justify-center items-center bg-[#ffffff18] py-10 rounded-3xl backdrop-blur-2xl border border-[#ffffff96]">
-        <h2 className="pt-10 text-white font-bold mb-10 text-3xl">Punch Out</h2>
+        <div className="flex px-2 flex-col justify-center items-center bg-[#ffffff18] py-10 rounded-3xl backdrop-blur-2xl border border-[#ffffff96]">
+          <h2 className="pt-10 text-white font-bold mb-10 text-3xl">
+            Punch Out
+          </h2>
 
-        <div className="flex flex-col md:flex-row justify-center items-center gap-5 mb-5 w-full px-4">
-          <div className="text-white whitespace-nowrap hidden md:block">Customer :</div>
-          <select 
-            className="w-full md:w-auto min-w-[200px] px-8 py-2 rounded-3xl bg-white outline-none border-none cursor-pointer"
-            value={selectedCustomer}
-            onChange={(e) => setSelectedCustomer(e.target.value)}
-            disabled={loading} 
-          >
-            <option value="">Select a customer</option>
-            {Array.isArray(customers) && customers.map((customer) => (
-              <option key={customer.id || customer._id} value={customer.name || customer.customerName || customer.id}>
-                {customer.name || customer.customerName || 'Unnamed Customer'}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex justify-end items-center gap-5 w-full px-3">
-          <div className="text-white">Image :</div>
-          <div
-            onClick={() => setShowCamera(true)}
-            className="bg-white flex items-center cursor-pointer gap-3 py-2 px-10 rounded-3xl"
-          >
-            Take a Photo <LuCamera />
-          </div>
-        </div>
-
-        
-
-        {/* Image Preview */}
-        {capturedImage && (
-          <motion.div
-          initial={{height:0, opacity:0}}
-          animate={{height:"auto",opacity:1,transition:{duration:1, delay:.2,ease:"backInOut"}}}
-          className="mt-5 w-full max-w-md">
-            <div className="bg-gray-800 p-3 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-white text-sm">Preview:</h3>
-                <button
-                  onClick={() => {
-                    // Clean up the object URL 
-                    if (capturedImage.url) {
-                      URL.revokeObjectURL(capturedImage.url);
-                    }
-                    setCapturedImage(null);
-                  }}
-                  className="text-white text-lg hover:text-gray-300"
-                >
-                  <IoClose />
-                </button>
-              </div>
-              <div className="relative bg-black rounded-lg overflow-hidden">
-                <img
-                  src={capturedImage.url}
-                  alt="Captured"
-                  className="w-full h-48 object-cover"
-                />
-              </div>
+          <div className="flex flex-col md:flex-row justify-center items-center gap-5 mb-5 w-full px-4">
+            <div className="text-white whitespace-nowrap hidden md:block">
+              Customer :
             </div>
-          </motion.div>
-        )}
+            <div className="relative w-full md:w-auto min-w-[200px]">
+              <div
+                className="w-full px-8 py-2 bg-white rounded-3xl cursor-pointer"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                {selectedCustomer || "Select a customer"}
+              </div>
 
-        {/* Punch Button */}
-        <div className="flex w-full justify-end items-center mt-5 px-2">
-          <button
-            onClick={handlePunchOut}
-            disabled={!selectedCustomer || !capturedImage || loading}
-            className={`px-10 py-2 cursor-pointer rounded-3xl font-bold text-white bg-red-600 ${
-              (!selectedCustomer || !capturedImage || loading) ? 'opacity-50' : ''
-            }`}
-          >
-            {loading ? "Processing..." : "Punch Out"}
-          </button>
-        </div>
-        
-        {/* Debug Info */}
-        {/* {debugInfo && (
-          <div className="mt-8 p-3 bg-gray-800 text-xs text-white rounded w-full max-w-md overflow-auto" style={{maxHeight: '150px'}}>
-            <pre>{debugInfo}</pre>
-          </div>
-        )} */}
-      </div>
-      </div>
-      {/* Camera Modal */}
-      {showCamera && (
-          <div className="fixed left-0 right-0 top-0 bottom-0 inset-0 bg-black flex items-center justify-center z-50  backdrop-blur-2xl w-full">
-            <div className="bg-gray-800 p-4 rounded-lg w-full relative h-[100vh]">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white text-lg font-medium">
-                  {facingMode === "user" ? "Front Camera" : "Back Camera"}
-                </h3>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setFacingMode((prev) =>
-                      prev === "user" ? "environment" : "user"
+              {dropdownOpen && (
+                <div className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-lg z-10">
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="w-full px-4 py-2 border-b outline-none"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="max-h-48 overflow-y-auto">
+                    {filteredCustomers.length > 0 ? (
+                      filteredCustomers.map((customer) => (
+                        <div
+                          key={customer.id || customer._id}
+                          onClick={() => {
+                            setSelectedCustomer(
+                              customer.name ||
+                                customer.customerName ||
+                                "Unnamed Customer"
+                            );
+                            setDropdownOpen(false);
+                            setSearchTerm("");
+                          }}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        >
+                          {customer.name ||
+                            customer.customerName ||
+                            "Unnamed Customer"}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-gray-500">
+                        No matching customers
+                      </div>
                     )}
-                    className="text-white bg-blue-500 px-3 py-1 rounded-md hover:bg-blue-600"
-                  >
-                    Switch Camera
-                  </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end items-center gap-5 w-full px-3">
+            <div className="text-white">Image :</div>
+            <div
+              onClick={() => setShowCamera(true)}
+              className="bg-white flex items-center cursor-pointer gap-3 py-2 px-10 rounded-3xl"
+            >
+              Take a Photo <LuCamera />
+            </div>
+          </div>
+
+          {/* Image Preview */}
+          {capturedImage && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{
+                height: "auto",
+                opacity: 1,
+                transition: { duration: 1, delay: 0.2, ease: "backInOut" },
+              }}
+              className="mt-5 w-full max-w-md"
+            >
+              <div className="bg-gray-800 p-3 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-white text-sm">Preview:</h3>
                   <button
-                    onClick={() => setShowCamera(false)}
-                    className="text-white text-2xl hover:text-gray-300"
+                    onClick={() => {
+                      // Clean up the object URL
+                      if (capturedImage.url) {
+                        URL.revokeObjectURL(capturedImage.url);
+                      }
+                      setCapturedImage(null);
+                    }}
+                    className="text-white text-lg hover:text-gray-300"
                   >
                     <IoClose />
                   </button>
                 </div>
+                <div className="relative bg-black rounded-lg overflow-hidden">
+                  <img
+                    src={capturedImage.url}
+                    alt="Captured"
+                    className="w-full h-48 object-cover"
+                  />
+                </div>
               </div>
+            </motion.div>
+          )}
 
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover bg-black rounded-lg"
-                style={{
-                  transform: facingMode === "user" ? "scaleX(-1)" : "none",
-                }}
-              />
+          {/* Punch Button */}
+          <div className="flex w-full justify-end items-center mt-5 px-2">
+            <button
+              onClick={handlePunchOut}
+              disabled={!selectedCustomer || !capturedImage || loading}
+              className={`px-10 py-2 cursor-pointer rounded-3xl font-bold text-white bg-red-600 ${
+                !selectedCustomer || !capturedImage || loading
+                  ? "opacity-50"
+                  : ""
+              }`}
+            >
+              {loading ? "Processing..." : "Punch Out"}
+            </button>
+          </div>
 
-              <div className="flex justify-center">
+          {/* Debug Info */}
+          {/* {debugInfo && (
+          <div className="mt-8 p-3 bg-gray-800 text-xs text-white rounded w-full max-w-md overflow-auto" style={{maxHeight: '150px'}}>
+            <pre>{debugInfo}</pre>
+          </div>
+        )} */}
+        </div>
+      </div>
+      {/* Camera Modal */}
+      {showCamera && (
+        <div className="fixed left-0 right-0 top-0 bottom-0 inset-0 bg-black flex items-center justify-center z-50  backdrop-blur-2xl w-full">
+          <div className="bg-gray-800 p-4 rounded-lg w-full relative h-[100vh]">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white text-lg font-medium">
+                {facingMode === "user" ? "Front Camera" : "Back Camera"}
+              </h3>
+              <div className="flex gap-3">
                 <button
-                  onClick={capturePhoto}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 flex items-center gap-2 absolute z-50 bottom-10"
+                  onClick={() =>
+                    setFacingMode((prev) =>
+                      prev === "user" ? "environment" : "user"
+                    )
+                  }
+                  className="text-white bg-blue-500 px-3 py-1 rounded-md hover:bg-blue-600"
                 >
-                  <LuCamera /> Capture
+                  Switch Camera
+                </button>
+                <button
+                  onClick={() => setShowCamera(false)}
+                  className="text-white text-2xl hover:text-gray-300"
+                >
+                  <IoClose />
                 </button>
               </div>
             </div>
+
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover bg-black rounded-lg"
+              style={{
+                transform: facingMode === "user" ? "scaleX(-1)" : "none",
+              }}
+            />
+
+            <div className="flex justify-center">
+              <button
+                onClick={capturePhoto}
+                className="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 flex items-center gap-2 absolute z-50 bottom-10"
+              >
+                <LuCamera /> Capture
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 };

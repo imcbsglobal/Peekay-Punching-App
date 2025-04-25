@@ -14,11 +14,13 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const [openConfirmPunchIn, setOpenConfirmPunchIn] = useState(false)
 
+
   useEffect(() => {
     // Get user data from localStorage
     const userData = JSON.parse(localStorage.getItem("userData"));
-    if (userData && userData.name) {
-      setUserName(userData.name);
+    // console.log("username",userData.id)
+    if (userData && userData.id) {
+      setUserName(userData.id);
     }
   }, []);
 
@@ -76,7 +78,7 @@ const UserDashboard = () => {
           <RiLogoutBoxLine />
         </div>
       </div>
-      <div className="flex flex-col justify-center items-center w-full px-2">
+      <div className="flex flex-col justify-center items-center w-full px-2 max-w-[700px] mx-auto">
         <div className="w-[150px] mb-5 pt-28">
           <img src={pkLogo} alt="" className="w-full h-full object-contain" />
         </div>

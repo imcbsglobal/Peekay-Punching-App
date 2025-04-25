@@ -7,6 +7,8 @@ import PunchInDashboard from './components/PunchInDashboard';
 import ProtectedRoute from './ProtectedRoute';
 
 function App() {
+  const isAuthenticated = authAPI.isAuthenticated();
+  const isPunchedIn = !!localStorage.getItem("currentPunch");
   return (
     <BrowserRouter>
       <Routes>
@@ -14,9 +16,13 @@ function App() {
         {/* Public routes */}
         <Route path="/" element={<Intro/>}/>
         <Route path="/login" element={
-          // Redirect to dashboard if already logged in
-          authAPI.isAuthenticated() ? <Navigate to="/userDashboard" replace /> : <Login />
-        } />
+          authAPI.isAuthenticated()
+            ? localStorage.getItem("currentPunch")
+              ? <Navigate to="/punchInDashboard" replace />
+              : <Navigate to="/userDashboard" replace />
+            : <Login />
+          } 
+        />
         
         
         {/* Protected routes */}
@@ -27,9 +33,20 @@ function App() {
         </Route>
         
         {/* Default redirect */}
-        <Route path="*" element={
+        {/* <Route path="*" element={
           authAPI.isAuthenticated() ? <Navigate to="/userDashboard" replace /> : <Navigate to="/login" replace />
-        } />
+        } /> */}
+         {/* Default redirect */}
+         <Route
+          path="*"
+          element={
+            isAuthenticated
+              ? isPunchedIn
+                ? <Navigate to="/punchInDashboard" replace />
+                : <Navigate to="/userDashboard" replace />
+              : <Navigate to="/login" replace />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
