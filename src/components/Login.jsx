@@ -29,7 +29,7 @@ const Login = () => {
 
   return (
     <div className="h-screen w-full flex justify-center items-center px-2">
-      <div className="flex flex-col justify-center items-center w-full max-w-[700px] mx-auto px-2 md:bg-[#ffffff19] md:backdrop-blur-3xl rounded-3xl md:p-10">
+      <div className="flex flex-col justify-center items-center w-full max-w-[700px] mx-auto px-2 bg-[#ffffff19] md:backdrop-blur-3xl rounded-3xl md:p-10">
         <div className="w-[150px] mb-10">
           <img src={pkLogo} alt="Logo" className="w-full h-full object-contain" />
         </div>

@@ -5,10 +5,14 @@ import { RiLogoutBoxLine } from "react-icons/ri";
 import { FaUser } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { authAPI, punchAPI } from "../api";
+import { IoMdClose } from "react-icons/io";
+import { motion } from "framer-motion"
+
 
 const UserDashboard = () => {
   const [userName, setUserName] = useState("");
   const navigate = useNavigate();
+  const [openConfirmPunchIn, setOpenConfirmPunchIn] = useState(false)
 
   useEffect(() => {
     // Get user data from localStorage
@@ -36,11 +40,11 @@ const UserDashboard = () => {
         status: "IN"
       };
 
-      console.log("Sending punch-in data:", punchInData);
+      // console.log("Sending punch-in data:", punchInData);
 
       // Call the API to punch in
       const response = await punchAPI.punchIn(punchInData);
-      console.log("Punch-in response:", response);
+      // console.log("Punch-in response:", response);
       
       // Store the complete response data or specifically extract the ID
       if (response && response.data) {
@@ -82,10 +86,10 @@ const UserDashboard = () => {
           </span>{" "}
           Hi, {userName || "User"}
         </div>
-        <div className="flex justify-between gap-5">
+        <div className="flex justify-between w-full gap-5">
           <div className="">
             <button 
-              onClick={handlePunchIn}
+              onClick={() => setOpenConfirmPunchIn(!openConfirmPunchIn)}
               className="px-10 py-2 rounded-3xl bg-[#fff] text-[#3fab00] border border-[#3fab00] font-bold cursor-pointer"
             >
               Punch In
@@ -106,6 +110,23 @@ const UserDashboard = () => {
           Powered By <span className="block">IMC Business Solutions</span>
         </div>
       </div>
+      {/* Confirm PunchIn */}
+      {openConfirmPunchIn && (
+        <motion.div 
+        className="fixed top-0 bottom-0 left-0 right-0 bg-[#00000060] backdrop-blur-xl flex flex-col justify-center items-center px-2">
+        <motion.div
+        initial={{opacity:0, scale:0}}
+        animate={{scale:1,opacity:1,transition:{duration:.9,ease:"backInOut"}}}
+        className="max-w-[600px] w-full h-[150px] bg-[#fff2] rounded-3xl">
+          <div className="absolute right-5 pt-5 text-[#fff]" onClick={() => setOpenConfirmPunchIn(!openConfirmPunchIn)}><IoMdClose/></div>
+          <div className="text-[#fff] font-bold pt-5 text-center mb-5">Are you sure want to Punch In</div>
+          <div className="flex justify-center items-center gap-10">
+            <button className="px-5 py-2 bg-[#1faa00] rounded-md text-[#fff] font-semibold" onClick={handlePunchIn}>Punch In</button>
+            <button className="bg-[#f00] px-5 py-2 font-semibold rounded-md text-[#fff]" onClick={() => setOpenConfirmPunchIn(!openConfirmPunchIn)}>Cancel</button>
+          </div>
+        </motion.div>
+      </motion.div>
+      )}
     </div>
   );
 };

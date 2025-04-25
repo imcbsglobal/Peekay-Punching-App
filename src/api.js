@@ -100,29 +100,49 @@ export const punchAPI = {
 
   // Record a punch-out
   punchOut: async (punchData) => {
-    // Validate required fields based on updated controller requirements
+    // Validate required fields
     if (
       !punchData.id ||
       !punchData.punchOutLocation ||
       !punchData.punchOutTime ||
-      !punchData.customerName ||
-      !punchData.photo
+      !punchData.customerName
     ) {
       throw new Error(
-        "Required fields missing: id, punchOutLocation, punchOutTime, customerName, and photo are required"
+        "Required fields missing: id, punchOutLocation, punchOutTime, and customerName are required"
       );
     }
 
-    const formattedData = {
-      id: punchData.id,
-      punchOutTime: punchData.punchOutTime,
-      punchOutLocation: punchData.punchOutLocation,
-      customerName: punchData.customerName,
-      photo: punchData.photo,
+    // Create FormData for multipart/form-data upload
+    const formData = new FormData();
+    formData.append("id", punchData.id);
+    formData.append("punchOutTime", punchData.punchOutTime);
+    formData.append("punchOutLocation", punchData.punchOutLocation);
+    formData.append("customerName", punchData.customerName);
+    
+    // Add photo file if available
+    if (punchData.file) {
+      formData.append("photo", punchData.file);
+    }
+
+    // Custom config for multipart/form-data
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
     };
 
-    const response = await api.post("/punch/punch-out", formattedData);
-    return response.data;
+    // Make the API call with FormData
+    try {
+      const response = await api.post("/punch/punch-out", formData, config);
+      return response.data;
+    } catch (error) {
+      console.error("API Error:", error);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+      }
+      throw error;
+    }
   },
 
   // Get current location coordinates
