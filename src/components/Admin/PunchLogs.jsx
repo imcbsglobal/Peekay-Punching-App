@@ -61,7 +61,7 @@ const PunchLogs = () => {
         const data = await getPunchRecords();
         setRecords(data.data);
         // Debug logging
-        console.log("Photo filenames:", data.data.map(record => record.photo_filename));
+        // console.log("Photo filenames:", data.data.map(record => record.photo_filename));
       } catch (error) {
         console.error("Error fetching punch records:", error.message);
       }
@@ -90,13 +90,13 @@ const PunchLogs = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="overflow-hidden">
       <div className="text-3xl text-[#fff] mb-6 font-bold text-center pt-10">
         Punch Logs
       </div>
 
       <div className="grid w-full md:grid-cols-12 gap-10 justify-between items-center mb-5">
-        <div className="flex justify-center col-span-12 md:col-span-9 w-full mb-5 md:mb-0">
+        <div className="flex justify-center col-span-12 md:col-span-9 mb-5 md:mb-0">
           <input
             type="text"
             placeholder="Search by Customer Name"
@@ -109,7 +109,7 @@ const PunchLogs = () => {
           />
         </div>
         {/* Pagination Controls */}
-        <div className="flex justify-center items-center gap-4 md:col-span-3 w-full col-span-12">
+        <div className="flex justify-center items-center gap-4 md:col-span-3  col-span-12">
           <button
             onClick={handlePrev}
             disabled={currentPage === 1}
@@ -190,7 +190,7 @@ const PunchLogs = () => {
                 <td className="px-6 py-4">
                   {record.photo_filename ? (
                     <img
-                      src={`/uploads/${record.photo_filename}`}
+                      src={record.photo_filename}
                       alt="Punch"
                       className="rounded-full border border-cyan-500 shadow-md w-10 h-10 object-cover"
                       onError={(e) => {

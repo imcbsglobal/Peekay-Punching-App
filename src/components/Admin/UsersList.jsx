@@ -48,8 +48,8 @@ const UsersList = () => {
         Users
       </div>
 
-      <div className="grid w-full md:grid-cols-12 justify-between items-center mb-5">
-        <div className="flex justify-center col-span-9 w-full">
+      <div className="grid w-full md:grid-cols-12 gap-5 justify-between items-center mb-5">
+        <div className="flex justify-center col-span-12 md:col-span-9 w-full mb-5 md:mb-0">
           <input
             type="text"
             placeholder="Search by User Name"
@@ -61,11 +61,11 @@ const UsersList = () => {
             className="p-2 w-full rounded-md bg-gray-700 outline-none text-sm lg:text-base text-white border border-gray-600"
           />
         </div>
-        <div className="flex justify-center gap-4 col-span-3 w-full">
+        <div className="flex justify-center gap-4 col-span-12 md:col-span-3 w-full">
           <button
             onClick={handlePrevious}
             disabled={currentPage === 1}
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded w-full ${
               currentPage === 1
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
@@ -73,13 +73,13 @@ const UsersList = () => {
           >
             Previous
           </button>
-          <span className="text-white self-center text-xs">
+          <span className="text-white w-full self-center text-xs">
             Page {currentPage} of {totalPages}
           </span>
           <button
             onClick={handleNext}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded ${
+            className={`px-4 py-2 rounded w-full ${
               currentPage === totalPages
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
