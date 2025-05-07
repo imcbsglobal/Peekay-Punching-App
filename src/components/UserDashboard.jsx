@@ -30,7 +30,7 @@ const UserDashboard = () => {
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
-  console.log("Customer Address",customers.customer)
+  // console.log("Customer Address",customers.customer)
 
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const UserDashboard = () => {
     const fetchCustomers = async () => {
       try {
         const response = await punchAPI.getCustomers();
-        console.log("Customers List",response)
+        // console.log("Customers List",response)
         const customersArray = Array.isArray(response) ? response : 
                            Array.isArray(response.data) ? response.data : [];
         setCustomers(customersArray);

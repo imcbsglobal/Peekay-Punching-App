@@ -1,65 +1,71 @@
-import React, { useState, useEffect } from "react";
-import { FaAngleLeft } from "react-icons/fa6";
+import React, { useState, useRef, useEffect } from "react";
+import { FaAngleLeft, FaDownload } from "react-icons/fa6";
 import { RiLogoutBoxLine } from "react-icons/ri";
+import { LuCamera } from "react-icons/lu";
+import { IoClose } from "react-icons/io5";
 import { punchAPI, authAPI } from "../api";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion"
 
 const PunchInDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [currentPunchData, setCurrentPunchData] = useState(null);
-  const [showBackConfirmation, setShowBackConfirmation] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Prevent navigation when the component mounts
   useEffect(() => {
-    // This properly blocks browser back button navigation
-    const handleBack = (e) => {
+    // Block navigation using History API
+    window.history.pushState(null, "", window.location.href);
+    
+    // Handle popstate (back/forward buttons)
+    const handlePopState = (e) => {
       e.preventDefault();
-      // Instead of silently blocking, show a confirmation dialog
-      setShowBackConfirmation(true);
-      // Push current URL to history stack to maintain the block
       window.history.pushState(null, "", window.location.href);
     };
-  
-    // Add the current URL to history stack to enable popstate to work
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", handleBack);
-  
+
+    // Handle beforeunload (page refresh/close)
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
-      window.removeEventListener("popstate", handleBack);
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
 
+  // Check for pending punches and redirect if none found
   useEffect(() => {
-    // Get current punch data from localStorage
-    const storedPunchData = localStorage.getItem('currentPunch');
-    
-    if (storedPunchData) {
+    const verifyPunchStatus = async () => {
       try {
-        const parsedData = JSON.parse(storedPunchData);
-        setCurrentPunchData(parsedData);
-      } catch (e) {
-        alert("Error parsing stored punch data. Please punch in again.");
-        navigate("/UserDashboard", { replace: true });
+        const pendingPunches = await punchAPI.getPendingPunches();
+        if (!pendingPunches || pendingPunches.length === 0) {
+          navigate("/userDashboard", { replace: true });
+        } else {
+          setCurrentPunchData(pendingPunches[0]);
+        }
+      } catch (error) {
+        console.error("Error verifying punch status:", error);
       }
-    } else {
-      alert("No active punch-in found. Please punch in first.");
-      navigate("/UserDashboard", { replace: true });
-    }
+    };
+
+    verifyPunchStatus();
   }, [navigate]);
 
   const handlePunchOut = async () => {
     try {
-      // Extract the punch ID from stored data
-      const punchId = currentPunchData?.id || currentPunchData?.data?.id || 
-                     currentPunchData?._id || currentPunchData?.data?._id;
-      
-      if (!punchId) {
-        alert("Invalid punch data. Please punch in again.");
-        navigate("/userDashboard");
+      if (!currentPunchData) {
+        alert("No active punch-in found");
+        navigate("/userDashboard", { replace: true });
         return;
       }
-  
+
       const location = await punchAPI.getCurrentLocation();
       const locationString = `${location.latitude},${location.longitude}`;
       const currentTime = punchAPI.getCurrentTimeISO();
@@ -68,35 +74,21 @@ const PunchInDashboard = () => {
       setLoading(true);
   
       const punchOutData = {
-        id: punchId,
+        id: currentPunchData.id || currentPunchData._id,
         punchOutLocation: locationString,
         punchOutTime: currentTime,
         punchOutDate: currentDate
       };
   
-      const response = await punchAPI.punchOut(punchOutData);
-      
-      localStorage.removeItem('currentPunch');
+      await punchAPI.punchOut(punchOutData);
       alert("Punch out successful!");
-      navigate("/userDashboard");
+      navigate("/userDashboard", { replace: true });
     } catch (error) {
       console.error("Punch-out failed:", error);
-      if (error.response?.data?.message) {
-        alert(`Failed to punch out: ${error.response.data.message}`);
-      } else {
-        alert("Failed to punch out. Please try again.");
-      }
+      alert(error.response?.data?.message || "Failed to punch out. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const attemptBackToUserDashboard = () => {
-    setShowBackConfirmation(true);
-  };
-
-  const cancelBackAttempt = () => {
-    setShowBackConfirmation(false);
   };
 
   const handleLogout = () => {
@@ -104,128 +96,33 @@ const PunchInDashboard = () => {
     navigate("/login");
   };
 
-  // Calculate time elapsed since punch-in (if data available)
-  const calculateElapsedTime = () => {
-    if (!currentPunchData) return "00:00:00";
-    
-    const punchInTime = currentPunchData?.punchInTime || 
-                        currentPunchData?.data?.punchInTime;
-    
-    if (!punchInTime) return "00:00:00";
-    
-    const startTime = new Date(punchInTime);
-    const currentTime = new Date();
-    const elapsedMilliseconds = currentTime - startTime;
-    
-    // Convert to hours, minutes, seconds
-    const hours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
-    const minutes = Math.floor((elapsedMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((elapsedMilliseconds % (1000 * 60)) / 1000);
-    
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const [elapsedTime, setElapsedTime] = useState("00:00:00");
-
-  // Update elapsed time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedTime(calculateElapsedTime());
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [currentPunchData]);
-
   return (
     <div className="overflow-x-hidden h-screen">
-      <div className="flex items-center justify-between pt-5 px-4">
-        <div
-          onClick={attemptBackToUserDashboard}
-          className="text-white text-3xl cursor-pointer"
-        >
-          <FaAngleLeft />
-        </div>
-        <div
-          onClick={handleLogout}
-          className="text-white text-3xl cursor-pointer"
-        >
-          <RiLogoutBoxLine />
-        </div>
+      {/* Remove or disable back buttons in the UI */}
+      <div className="flex items-center justify-between pt-5">
+        {/* Remove or disable back button */}
       </div>
 
-      <div className="px-4 mt-6">
-        <div className="flex flex-col justify-center items-center bg-[#ffffff18] py-10 rounded-3xl backdrop-blur-2xl border border-[#ffffff96]">
-          <h2 className="pt-5 text-white font-bold mb-4 text-3xl">
-            Currently Punched In
+      <div className="px-2">
+        <div className="flex px-2 flex-col justify-center items-center bg-[#ffffff18] py-10 rounded-3xl backdrop-blur-2xl border border-[#ffffff96]">
+          <h2 className="pt-10 text-white font-bold mb-10 text-3xl">
+            Punch Out
           </h2>
-          
-          {/* Customer information */}
-          <div className="text-white text-center mb-8">
-            <div className="text-lg font-medium">
-              {currentPunchData?.customerName || currentPunchData?.data?.customerName || "Customer"}
-            </div>
-            <div className="text-sm opacity-80">
-              Punched in at: {new Date(currentPunchData?.punchInTime || currentPunchData?.data?.punchInTime || Date.now()).toLocaleTimeString()}
-            </div>
-          </div>
-          
-          {/* Timer display */}
-          <div className="bg-[#ffffff30] px-6 py-3 rounded-xl mb-8">
-            <div className="text-white text-center">
-              <div className="text-sm">Time Elapsed</div>
-              <div className="text-2xl font-bold font-mono">{elapsedTime}</div>
-            </div>
-          </div>
 
-          {/* Punch Button */}
-          <div className="flex w-full justify-center items-center mt-5 px-6">
+          {/* Punch Button - simplified */}
+          <div className="flex w-full justify-end items-center mt-5 px-2">
             <button
               onClick={handlePunchOut}
               disabled={loading}
-              className={`px-10 py-3 cursor-pointer rounded-3xl font-bold text-white bg-red-600 ${
-                loading ? "opacity-50" : "hover:bg-red-700"
-              } transition-colors`}
+              className={`px-10 py-2 cursor-pointer rounded-3xl font-bold text-white bg-red-600 ${
+                loading ? "opacity-50" : ""
+              }`}
             >
               {loading ? "Processing..." : "Punch Out"}
             </button>
           </div>
-          
-          {/* Guidance text */}
-          <div className="text-white text-sm mt-8 text-center px-4 opacity-80">
-            You need to punch out before you can return to the dashboard
-          </div>
         </div>
       </div>
-
-      {/* Back confirmation modal */}
-      {showBackConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-lg p-6 w-full max-w-sm"
-          >
-            <h3 className="font-bold text-lg mb-4">Active Punch-In Session</h3>
-            <p className="mb-6">
-              You must punch out before returning to the dashboard. Would you like to punch out now?
-            </p>
-            <div className="flex justify-between">
-              <button 
-                onClick={cancelBackAttempt}
-                className="px-4 py-2 bg-gray-200 rounded-md font-medium"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handlePunchOut}
-                className="px-4 py-2 bg-red-600 text-white rounded-md font-medium"
-              >
-                Punch Out Now
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 };

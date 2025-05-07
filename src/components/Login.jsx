@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import pkLogo from "../assets/pklogo.png";
-import { authAPI } from '../api';
+import { authAPI, punchAPI } from '../api';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -14,12 +14,18 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
+  
     try {
       const response = await authAPI.login(username, password);
-      // Store user data in localStorage
       localStorage.setItem("userData", JSON.stringify(response.data));
-      navigate('/userDashboard');
+      
+      // Check for pending punches after login
+      const pendingPunches = await punchAPI.getPendingPunches();
+      if (pendingPunches && pendingPunches.length > 0) {
+        navigate('/punchInDashboard', { replace: true });
+      } else {
+        navigate('/userDashboard', { replace: true });
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
