@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { getPunchRecords } from "../../api";
 import expired from "../../assets/expired.png"
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 // Format duration from { seconds }
 const formatDuration = (seconds = 0) => {
@@ -53,13 +55,16 @@ const PunchLogs = () => {
   const [records, setRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 5;
+  const recordsPerPage = 9;
+  const [filteredRecordss, setFilteredRecordss] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
     const fetchPunchRecords = async () => {
       try {
         const data = await getPunchRecords();
         setRecords(data.data);
+        // setFilteredRecordss(records);
         // Debug logging
         // console.log("Photo filenames:", data.data.map(record => record.photo_filename));
       } catch (error) {
@@ -70,10 +75,25 @@ const PunchLogs = () => {
     fetchPunchRecords();
   }, []);
 
-  // Filter records by customer name
-  const filteredRecords = records.filter((record) =>
-    record.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setCurrentPage(1); // Reset to first page on date change
+  };
+
+  // Apply both date and search filters
+  const filteredRecords = records.filter((record) => {
+    // Filter by search term (customer name or username)
+    const matchesSearch = 
+      record.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.username?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filter by date if selected
+    const matchesDate = selectedDate 
+      ? new Date(record.punch_date).toLocaleDateString() === selectedDate.toLocaleDateString()
+      : true;
+    
+    return matchesSearch && matchesDate;
+  });
 
   // Pagination logic
   const indexOfLast = currentPage * recordsPerPage;
@@ -95,11 +115,23 @@ const PunchLogs = () => {
         Punch Logs
       </div>
 
+      <div style={{ marginBottom: "1rem" }}>
+        <label className="text-white mr-2">Select Date: </label>
+        <DatePicker
+          selected={selectedDate}
+          onChange={handleDateChange}
+          placeholderText="Filter by date"
+          dateFormat="MM/dd/yyyy"
+          isClearable
+          className="p-2 rounded-md bg-gray-700 text-white border outline-none border-[#ffffff2d]"
+        />
+      </div>
+
       <div className="grid w-full md:grid-cols-12 gap-10 justify-between items-center mb-5">
         <div className="flex justify-center col-span-12 md:col-span-9 mb-5 md:mb-0">
           <input
             type="text"
-            placeholder="Search by Customer Name"
+            placeholder="Search by Customer Name or User"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -149,6 +181,7 @@ const PunchLogs = () => {
               <th className="px-6 py-4">Punch In Location</th>
               <th className="px-6 py-4">Punch Out Time</th>
               <th className="px-6 py-4">Punch Out Location</th>
+              <th className="px-6 py-4">Punch Out Date</th>
               <th className="px-6 py-4">Total Time</th>
               <th className="px-6 py-4">Photo</th>
             </tr>
@@ -160,7 +193,11 @@ const PunchLogs = () => {
                 className="border-b border-gray-700 hover:bg-gray-800 transition"
               >
                 <td className="px-6 py-4">
-                  {new Date(record.punch_date).toLocaleDateString()}
+                  {/* {new Date(record.punch_date).toLocaleDateString()} */}
+                  <li key={index}>
+                    {new Date(record.punch_date).toLocaleDateString()} -{" "}
+                    {record.punch_time}
+                  </li>
                 </td>
                 <td className="px-6 py-4">{record.username || "N/A"}</td>
                 <td className="px-6 py-4">{record.customer_name || "N/A"}</td>
@@ -176,15 +213,18 @@ const PunchLogs = () => {
                 <td className="px-6 py-4">
                   {record.punch_out_time
                     ? new Date(record.punch_out_time).toLocaleTimeString()
-                    : "—"}
+                    : "Pending"}
                 </td>
                 <td className="px-6 py-4">
                   <MapIcon location={record.punch_out_location} />
                 </td>
                 <td className="px-6 py-4">
+                  {new Date(record.punch_out_date).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4">
                   {record.total_time_spent?.seconds != null
                     ? formatDuration(record.total_time_spent.seconds)
-                    : "—"}
+                    : "Pending"}
                 </td>
 
                 <td className="px-6 py-4">
