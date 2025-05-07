@@ -1,43 +1,27 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FaAngleLeft, FaDownload } from "react-icons/fa6";
+import React, { useState, useEffect } from "react";
+import { FaAngleLeft } from "react-icons/fa6";
 import { RiLogoutBoxLine } from "react-icons/ri";
-import { LuCamera } from "react-icons/lu";
-import { IoClose } from "react-icons/io5";
 import { punchAPI, authAPI } from "../api";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 
 const PunchInDashboard = () => {
-  const [showCamera, setShowCamera] = useState(false);
-  const [capturedImage, setCapturedImage] = useState(null);
-  const [facingMode, setFacingMode] = useState("user");
-  const [customers, setCustomers] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPunchData, setCurrentPunchData] = useState(null);
-  const [debugInfo, setDebugInfo] = useState("");
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
+  const [showBackConfirmation, setShowBackConfirmation] = useState(false);
   const navigate = useNavigate();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const filteredCustomers = customers.filter((customer) =>
-    (customer.name || customer.customerName || "")
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
-
-
-
 
   useEffect(() => {
+    // This properly blocks browser back button navigation
     const handleBack = (e) => {
       e.preventDefault();
+      // Instead of silently blocking, show a confirmation dialog
+      setShowBackConfirmation(true);
+      // Push current URL to history stack to maintain the block
       window.history.pushState(null, "", window.location.href);
     };
   
-    // Disable back button navigation
+    // Add the current URL to history stack to enable popstate to work
     window.history.pushState(null, "", window.location.href);
     window.addEventListener("popstate", handleBack);
   
@@ -45,29 +29,8 @@ const PunchInDashboard = () => {
       window.removeEventListener("popstate", handleBack);
     };
   }, []);
-  
 
-  // Fetch customers and current punch data on component mount
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        setLoading(true);
-        const response = await punchAPI.getCustomers();
-        // Ensure we're working with an array
-        const customersArray = Array.isArray(response) ? response : 
-                             Array.isArray(response.data) ? response.data : 
-                             [];
-        setCustomers(customersArray);
-      } catch (error) {
-        // console.error("Failed to fetch customers:", error);
-        setDebugInfo(prev => prev + "\nFailed to fetch customers: " + JSON.stringify(error));
-        alert("Failed to load customers. Please try again.");
-        setCustomers([]); // Set empty array on error
-      } finally {
-        setLoading(false);
-      }
-    };
-
     // Get current punch data from localStorage
     const storedPunchData = localStorage.getItem('currentPunch');
     
@@ -75,148 +38,23 @@ const PunchInDashboard = () => {
       try {
         const parsedData = JSON.parse(storedPunchData);
         setCurrentPunchData(parsedData);
-        setDebugInfo("Current punch data: " + JSON.stringify(parsedData));
-        
-        // Check if we have an ID
-        if (!parsedData || (!parsedData.id && !parsedData._id)) {
-          setDebugInfo(prev => prev + "\nNo ID found in punch data");
-        }
       } catch (e) {
-        setDebugInfo("Error parsing stored punch data: " + e.message);
         alert("Error parsing stored punch data. Please punch in again.");
-        navigate("/userDashboard");
+        navigate("/UserDashboard", { replace: true });
       }
     } else {
-      setDebugInfo("No stored punch data found");
       alert("No active punch-in found. Please punch in first.");
-      navigate("/userDashboard");
+      navigate("/UserDashboard", { replace: true });
     }
-
-    fetchCustomers();
   }, [navigate]);
-
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest(".relative")) {
-        setShowDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-  
-
-  // Start camera when showCamera becomes true
-  useEffect(() => {
-    if (showCamera) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-
-    return () => stopCamera();
-  }, [showCamera, facingMode]);
-
-  const startCamera = async () => {
-    try {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { exact: facingMode },
-        },
-      });
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-
-      streamRef.current = stream;
-    } catch (err) {
-      // console.error("Camera error:", err);
-      setDebugInfo(prev => prev + "\nCamera error: " + err.message);
-      
-      // Try without exact facingMode constraint
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: facingMode,
-          },
-        });
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-
-        streamRef.current = stream;
-      } catch (fallbackErr) {
-        alert("Failed to access camera. Please check browser permissions.");
-        setDebugInfo(prev => prev + "\nFallback camera error: " + fallbackErr.message);
-      }
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-  };
-
-  const capturePhoto = () => {
-    const video = videoRef.current;
-    if (!video) return;
-  
-    const canvas = document.createElement("canvas");
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-  
-    canvas.width = width;
-    canvas.height = height;
-  
-    const ctx = canvas.getContext("2d");
-  
-    if (facingMode === "user") {
-      ctx.translate(width, 0);
-      ctx.scale(-1, 1);
-    }
-  
-    ctx.drawImage(video, 0, 0, width, height);
-  
-    // Convert canvas to blob
-    canvas.toBlob((blob) => {
-      // Create a File object from the blob
-      const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-      
-      // Create a local URL for preview
-      const imageUrl = URL.createObjectURL(blob);
-      
-      setCapturedImage({
-        url: imageUrl,
-        file: file
-      });
-      
-      setShowCamera(false);
-    }, "image/jpeg", 0.8);
-  };
 
   const handlePunchOut = async () => {
     try {
-      if (!selectedCustomer || !capturedImage) {
-        alert("Please select a customer and take a photo before punching out");
-        return;
-      }
-  
       // Extract the punch ID from stored data
       const punchId = currentPunchData?.id || currentPunchData?.data?.id || 
                      currentPunchData?._id || currentPunchData?.data?._id;
       
       if (!punchId) {
-        // console.error("No punch ID found:", currentPunchData);
-        setDebugInfo(prev => prev + "\nNo punch ID found in: " + JSON.stringify(currentPunchData));
         alert("Invalid punch data. Please punch in again.");
         navigate("/userDashboard");
         return;
@@ -225,32 +63,24 @@ const PunchInDashboard = () => {
       const location = await punchAPI.getCurrentLocation();
       const locationString = `${location.latitude},${location.longitude}`;
       const currentTime = punchAPI.getCurrentTimeISO();
+      const currentDate = currentTime.split('T')[0];
   
       setLoading(true);
-      setDebugInfo(prev => prev + "\nSending punch-out with ID: " + punchId);
-      // console.log("Sending punch-out data with image file");
   
-      // Create the data object for punch out
       const punchOutData = {
         id: punchId,
-        customerName: selectedCustomer,
-        file: capturedImage.file,
         punchOutLocation: locationString,
-        punchOutTime: currentTime
+        punchOutTime: currentTime,
+        punchOutDate: currentDate
       };
   
       const response = await punchAPI.punchOut(punchOutData);
-      // console.log("Punch-out response:", response);
       
-      // Clear the punch data from localStorage after successful punch out
       localStorage.removeItem('currentPunch');
-      
       alert("Punch out successful!");
       navigate("/userDashboard");
     } catch (error) {
       console.error("Punch-out failed:", error);
-      setDebugInfo(prev => prev + "\nPunch-out error: " + (error.message || JSON.stringify(error)));
-      
       if (error.response?.data?.message) {
         alert(`Failed to punch out: ${error.response.data.message}`);
       } else {
@@ -261,207 +91,139 @@ const PunchInDashboard = () => {
     }
   };
 
+  const attemptBackToUserDashboard = () => {
+    setShowBackConfirmation(true);
+  };
+
+  const cancelBackAttempt = () => {
+    setShowBackConfirmation(false);
+  };
+
   const handleLogout = () => {
     authAPI.logout();
     navigate("/login");
   };
 
+  // Calculate time elapsed since punch-in (if data available)
+  const calculateElapsedTime = () => {
+    if (!currentPunchData) return "00:00:00";
+    
+    const punchInTime = currentPunchData?.punchInTime || 
+                        currentPunchData?.data?.punchInTime;
+    
+    if (!punchInTime) return "00:00:00";
+    
+    const startTime = new Date(punchInTime);
+    const currentTime = new Date();
+    const elapsedMilliseconds = currentTime - startTime;
+    
+    // Convert to hours, minutes, seconds
+    const hours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((elapsedMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((elapsedMilliseconds % (1000 * 60)) / 1000);
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const [elapsedTime, setElapsedTime] = useState("00:00:00");
+
+  // Update elapsed time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedTime(calculateElapsedTime());
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [currentPunchData]);
+
   return (
     <div className="overflow-x-hidden h-screen">
-      <div className="flex items-center justify-between pt-5">
-        <a
-          href="/userDashboard"
-          className="text-white hidden text-3xl cursor-pointer"
+      <div className="flex items-center justify-between pt-5 px-4">
+        <div
+          onClick={attemptBackToUserDashboard}
+          className="text-white text-3xl cursor-pointer"
         >
           <FaAngleLeft />
-        </a>
+        </div>
         <div
           onClick={handleLogout}
-          className="text-white text-3xl hidden cursor-pointer"
+          className="text-white text-3xl cursor-pointer"
         >
           <RiLogoutBoxLine />
         </div>
       </div>
 
-      <div className="px-2">
-        <div className="flex px-2 flex-col justify-center items-center bg-[#ffffff18] py-10 rounded-3xl backdrop-blur-2xl border border-[#ffffff96]">
-          <h2 className="pt-10 text-white font-bold mb-10 text-3xl">
-            Punch Out
+      <div className="px-4 mt-6">
+        <div className="flex flex-col justify-center items-center bg-[#ffffff18] py-10 rounded-3xl backdrop-blur-2xl border border-[#ffffff96]">
+          <h2 className="pt-5 text-white font-bold mb-4 text-3xl">
+            Currently Punched In
           </h2>
-
-          <div className="flex flex-col md:flex-row justify-center items-center gap-5 mb-5 w-full px-4">
-            <div className="text-white whitespace-nowrap hidden md:block">
-              Customer :
+          
+          {/* Customer information */}
+          <div className="text-white text-center mb-8">
+            <div className="text-lg font-medium">
+              {currentPunchData?.customerName || currentPunchData?.data?.customerName || "Customer"}
             </div>
-            <div className="relative w-full md:w-auto min-w-[200px]">
-              <div
-                className="w-full px-8 py-2 bg-white rounded-3xl cursor-pointer"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                {selectedCustomer || "Select a customer"}
-              </div>
-
-              {dropdownOpen && (
-                <div className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-lg z-10">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="w-full px-4 py-2 border-b outline-none"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    autoFocus
-                  />
-                  <div className="max-h-48 overflow-y-auto">
-                    {filteredCustomers.length > 0 ? (
-                      filteredCustomers.map((customer) => (
-                        <div
-                          key={customer.id || customer._id}
-                          onClick={() => {
-                            setSelectedCustomer(
-                              customer.name ||
-                                customer.customerName ||
-                                "Unnamed Customer"
-                            );
-                            setDropdownOpen(false);
-                            setSearchTerm("");
-                          }}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        >
-                          {customer.name ||
-                            customer.customerName ||
-                            "Unnamed Customer"}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="px-4 py-2 text-gray-500">
-                        No matching customers
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+            <div className="text-sm opacity-80">
+              Punched in at: {new Date(currentPunchData?.punchInTime || currentPunchData?.data?.punchInTime || Date.now()).toLocaleTimeString()}
             </div>
           </div>
-
-          <div className="flex justify-end items-center gap-5 w-full px-3">
-            <div className="text-white">Image :</div>
-            <div
-              onClick={() => setShowCamera(true)}
-              className="bg-white flex items-center cursor-pointer gap-3 py-2 px-10 rounded-3xl"
-            >
-              Take a Photo <LuCamera />
+          
+          {/* Timer display */}
+          <div className="bg-[#ffffff30] px-6 py-3 rounded-xl mb-8">
+            <div className="text-white text-center">
+              <div className="text-sm">Time Elapsed</div>
+              <div className="text-2xl font-bold font-mono">{elapsedTime}</div>
             </div>
           </div>
-
-          {/* Image Preview */}
-          {capturedImage && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{
-                height: "auto",
-                opacity: 1,
-                transition: { duration: 1, delay: 0.2, ease: "backInOut" },
-              }}
-              className="mt-5 w-full max-w-md"
-            >
-              <div className="bg-gray-800 p-3 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-white text-sm">Preview:</h3>
-                  <button
-                    onClick={() => {
-                      // Clean up the object URL
-                      if (capturedImage.url) {
-                        URL.revokeObjectURL(capturedImage.url);
-                      }
-                      setCapturedImage(null);
-                    }}
-                    className="text-white text-lg hover:text-gray-300"
-                  >
-                    <IoClose />
-                  </button>
-                </div>
-                <div className="relative bg-black rounded-lg overflow-hidden">
-                  <img
-                    src={capturedImage.url}
-                    alt="Captured"
-                    className="w-full h-48 object-cover"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {/* Punch Button */}
-          <div className="flex w-full justify-end items-center mt-5 px-2">
+          <div className="flex w-full justify-center items-center mt-5 px-6">
             <button
               onClick={handlePunchOut}
-              disabled={!selectedCustomer || !capturedImage || loading}
-              className={`px-10 py-2 cursor-pointer rounded-3xl font-bold text-white bg-red-600 ${
-                !selectedCustomer || !capturedImage || loading
-                  ? "opacity-50"
-                  : ""
-              }`}
+              disabled={loading}
+              className={`px-10 py-3 cursor-pointer rounded-3xl font-bold text-white bg-red-600 ${
+                loading ? "opacity-50" : "hover:bg-red-700"
+              } transition-colors`}
             >
               {loading ? "Processing..." : "Punch Out"}
             </button>
           </div>
-
-          {/* Debug Info */}
-          {/* {debugInfo && (
-          <div className="mt-8 p-3 bg-gray-800 text-xs text-white rounded w-full max-w-md overflow-auto" style={{maxHeight: '150px'}}>
-            <pre>{debugInfo}</pre>
+          
+          {/* Guidance text */}
+          <div className="text-white text-sm mt-8 text-center px-4 opacity-80">
+            You need to punch out before you can return to the dashboard
           </div>
-        )} */}
         </div>
       </div>
-      {/* Camera Modal */}
-      {showCamera && (
-        <div className="fixed left-0 right-0 top-0 bottom-0 inset-0 bg-black flex items-center justify-center z-50  backdrop-blur-2xl w-full">
-          <div className="bg-gray-800 p-4 rounded-lg w-full relative h-[100vh]">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-white text-lg font-medium">
-                {facingMode === "user" ? "Front Camera" : "Back Camera"}
-              </h3>
-              <div className="flex gap-3">
-                <button
-                  onClick={() =>
-                    setFacingMode((prev) =>
-                      prev === "user" ? "environment" : "user"
-                    )
-                  }
-                  className="text-white bg-blue-500 px-3 py-1 rounded-md hover:bg-blue-600"
-                >
-                  Switch Camera
-                </button>
-                <button
-                  onClick={() => setShowCamera(false)}
-                  className="text-white text-2xl hover:text-gray-300"
-                >
-                  <IoClose />
-                </button>
-              </div>
-            </div>
 
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover bg-black rounded-lg"
-              style={{
-                transform: facingMode === "user" ? "scaleX(-1)" : "none",
-              }}
-            />
-
-            <div className="flex justify-center">
-              <button
-                onClick={capturePhoto}
-                className="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 flex items-center gap-2 absolute z-50 bottom-10"
+      {/* Back confirmation modal */}
+      {showBackConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 px-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg p-6 w-full max-w-sm"
+          >
+            <h3 className="font-bold text-lg mb-4">Active Punch-In Session</h3>
+            <p className="mb-6">
+              You must punch out before returning to the dashboard. Would you like to punch out now?
+            </p>
+            <div className="flex justify-between">
+              <button 
+                onClick={cancelBackAttempt}
+                className="px-4 py-2 bg-gray-200 rounded-md font-medium"
               >
-                <LuCamera /> Capture
+                Cancel
+              </button>
+              <button 
+                onClick={handlePunchOut}
+                className="px-4 py-2 bg-red-600 text-white rounded-md font-medium"
+              >
+                Punch Out Now
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

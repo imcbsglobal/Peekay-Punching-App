@@ -78,71 +78,57 @@ export const punchAPI = {
   },
 
   // Record a punch-in
+  // Update punchIn validation in punchAPI object
   punchIn: async (punchData) => {
+    // For FormData, we can't check fields directly
+    if (punchData instanceof FormData) {
+      // Verify required fields in FormData
+      const requiredFields = ['punchInLocation', 'punchInTime', 'customerName', 'photo'];
+      for (const field of requiredFields) {
+        if (!punchData.has(field)) {
+          throw new Error(`Required field missing: ${field}`);
+        }
+      }
+    } else {
+      // Original validation for JSON data
+      if (!punchData.punchInLocation || !punchData.punchInTime || 
+          !punchData.customerName || !punchData.photo) {
+        throw new Error(
+          "Required fields missing: punchInLocation, punchInTime, customerName and photo are required"
+        );
+      }
+    }
+  
+    const config = {
+      headers: {
+        'Content-Type': punchData instanceof FormData ? 'multipart/form-data' : 'application/json'
+      }
+    };
+  
+    const response = await api.post("/punch/punch-in", punchData, config);
+    return response.data;
+  },
+
+
+  // Record a punch-out
+  // Update punchOut validation in punchAPI object
+  punchOut: async (punchData) => {
     // Validate required fields
-    if (!punchData.punchInLocation || !punchData.punchInTime) {
+    if (!punchData.id || !punchData.punchOutLocation || !punchData.punchOutTime) {
       throw new Error(
-        "Required fields missing: punchInLocation and punchInTime are required"
+        "Required fields missing: id, punchOutLocation and punchOutTime are required"
       );
     }
 
     const formattedData = {
-      punchInTime: punchData.punchInTime,
-      punchInLocation: punchData.punchInLocation,
-      // Optional fields
-      customerName: punchData.customerName || null,
-      photo: punchData.photo || null,
+      id: punchData.id,
+      punchOutTime: punchData.punchOutTime,
+      punchOutLocation: punchData.punchOutLocation,
+      punchOutDate: punchData.punchOutDate || punchAPI.getCurrentTimeISO().split('T')[0]
     };
 
-    const response = await api.post("/punch/punch-in", formattedData);
+    const response = await api.post("/punch/punch-out", formattedData);
     return response.data;
-  },
-
-  // Record a punch-out
-  punchOut: async (punchData) => {
-    // Validate required fields
-    if (
-      !punchData.id ||
-      !punchData.punchOutLocation ||
-      !punchData.punchOutTime ||
-      !punchData.customerName
-    ) {
-      throw new Error(
-        "Required fields missing: id, punchOutLocation, punchOutTime, and customerName are required"
-      );
-    }
-
-    // Create FormData for multipart/form-data upload
-    const formData = new FormData();
-    formData.append("id", punchData.id);
-    formData.append("punchOutTime", punchData.punchOutTime);
-    formData.append("punchOutLocation", punchData.punchOutLocation);
-    formData.append("customerName", punchData.customerName);
-    
-    // Add photo file if available
-    if (punchData.file) {
-      formData.append("photo", punchData.file);
-    }
-
-    // Custom config for multipart/form-data
-    const config = {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      }
-    };
-
-    // Make the API call with FormData
-    try {
-      const response = await api.post("/punch/punch-out", formData, config);
-      return response.data;
-    } catch (error) {
-      console.error("API Error:", error);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-      }
-      throw error;
-    }
   },
 
   // Get current location coordinates
