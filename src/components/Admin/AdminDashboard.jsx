@@ -11,9 +11,11 @@ import Customers from "./Customers";
 import { CiLogout } from "react-icons/ci";
 import { MdOutlineArrowDropDownCircle } from "react-icons/md";
 import { CgClose } from "react-icons/cg";
+import AdminConsole from "./AdminConsole";
+import { FaUserNurse } from "react-icons/fa";
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState("punchLogs");
+  const [activeTab, setActiveTab] = useState("adminConsole");
   const [userName, setUserName] = useState("");
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
@@ -38,8 +40,10 @@ const AdminDashboard = () => {
         return <UsersList />;
       case "customers":
         return <Customers />;
+      case "puncLogs":
+        return <PunchLogs />;  
       default:
-        return <PunchLogs />;
+        return <AdminConsole />;
     }
   };
 
@@ -124,6 +128,13 @@ const AdminDashboard = () => {
             </div>
             <div className="flex flex-1 items-center justify-center">
               <ul className="flex flex-col w-full gap-4 px-10 text-lg font-semibold text-white">
+              <button
+                  onClick={() => setActiveTab("adminConsole")}
+                  className={`flex items-center justify-start gap-2 cursor-pointer ${activeTab === "adminConsole" ? "text-[#EEB31B] transition-all duration-300" : ""}`}
+                >
+                  <FaUserNurse />
+                  <span>Admin Dashboard</span>
+                </button>
                 <button
                   onClick={() => setActiveTab("punchLogs")}
                   className={`flex items-center justify-start gap-2 cursor-pointer ${activeTab === "punchLogs" ? "text-[#EEB31B] transition-all duration-300" : ""}`}
