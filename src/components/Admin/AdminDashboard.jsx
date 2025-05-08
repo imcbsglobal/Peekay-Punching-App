@@ -71,8 +71,18 @@ const AdminDashboard = () => {
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="flex items-center justify-center">
+            <div className="flex flex-col gap-5 items-center justify-center">
               <ul className="flex flex-col w-full gap-4 px-10 text-lg font-semibold text-white">
+                <button
+                  onClick={() => {
+                    setActiveTab("adminConsole");
+                    setOpenMenu(!openMenu);
+                  }}
+                  className="flex items-center justify-start gap-2 cursor-pointer"
+                >
+                  <FaUserNurse />
+                  <span>Admin Dashboard</span>
+                </button>
                 <button
                   onClick={() => {
                     setActiveTab("punchLogs");
@@ -106,6 +116,14 @@ const AdminDashboard = () => {
                   <span>Customers</span>
                 </button>
               </ul>
+
+              <button
+                onClick={handleLogout}
+                className="bottom-10 gap-2  flex justify-end items-center text-[#000000ae] cursor-pointer font-semibold bg-[#ffff] px-10 py-2 rounded-xl hover:bg-gray-100"
+              >
+                <CiLogout className="font-bold" /> Logout
+              </button>
+            
             </div>
           </div>
         )}

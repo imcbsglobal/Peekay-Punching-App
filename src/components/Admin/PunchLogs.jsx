@@ -131,21 +131,23 @@ const PunchLogs = () => {
         />
       </div>
 
-      <div className="grid w-full md:grid-cols-12 gap-10 justify-between items-center mb-5">
-        <div className="flex justify-center col-span-12 md:col-span-9 mb-5 md:mb-0">
+      <div className="grid w-full grid-cols-1 md:grid-cols-12 gap-4 md:gap-10 items-center mb-5">
+        {/* Search Input */}
+        <div className="col-span-1 md:col-span-9">
           <input
             type="text"
             placeholder="Search by Customer Name or User"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset to first page on search
+              setCurrentPage(1);
             }}
             className="p-2 w-full rounded-md bg-gray-700 text-white border outline-none border-[#ffffff2d]"
           />
         </div>
+
         {/* Pagination Controls */}
-        <div className="flex justify-center items-center gap-4 md:col-span-3  col-span-12">
+        <div className="col-span-1 md:col-span-3 flex flex-col md:flex-row justify-center items-center gap-3 md:gap-4 w-full">
           <button
             onClick={handlePrev}
             disabled={currentPage === 1}
@@ -157,13 +159,13 @@ const PunchLogs = () => {
           >
             Previous
           </button>
-          <span className="text-white text-sm w-full">
+          <span className="text-white text-sm text-center w-full md:w-auto">
             Page {currentPage} of {totalPages}
           </span>
           <button
             onClick={handleNext}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded w-full ${
+            className={`px-4 py-2 rounded w-full md:w-auto ${
               currentPage === totalPages
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"

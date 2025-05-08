@@ -93,10 +93,10 @@ const AdminConsole = () => {
       }, []);
 
   return (
-    <div className='md:pt-[80px] overflow-hidden'>
+    <div className='md:pt-[80px] pt-16 overflow-hidden'>
       <section>
         <div>
-            <div className='grid grid-cols-1 md:grid-cols-2 w-full place-items-center gap-10 mb-10'>
+            <div className='grid grid-cols-1 md:grid-cols-2 w-full place-items-center gap-2 md:gap-10 mb-2 md:mb-10'>
                 <div className='w-full h-[150px] bg-[#ffffff13] text-[#fff] border border-[#EEB31B] rounded-3xl flex flex-col justify-center items-center gap-2'>
                     <div className='text-2xl font-semibold'>Total Users</div>
                     <div className='flex justify-center items-center gap-2  text-3xl'><FaUser className='text-[#EEB31B]'/> <span className='font-bold'>{userCount}</span></div>
@@ -106,9 +106,9 @@ const AdminConsole = () => {
                     <div className='flex justify-center items-center gap-2  text-3xl'><FaUser className='text-[#EEB31B]'/> <span className='font-bold'>{customerCount}</span></div>
                 </div>
             </div>
-            <div className='h-[570px] bg-[#ffffff13] w-full rounded-3xl mb-10 py-10 px-10'>
-                <div className='text-3xl font-semibold text-[#fff] mb-5'>Recent Punch Logs</div>
-                <div className="overflow-x-auto rounded-xl shadow-xl overflow-hidden">
+            <div className='h-[570px] bg-[#ffffff13] w-full rounded-3xl mb-5 md:mb-10 py-5 md:py-10 px-2 md:px-10'>
+                <div className='text-3xl font-semibold text-[#fff] mb-5 text-center md:text-start'>Recent Punch Logs</div>
+                <div className="overflow-x-auto rounded-xl md:shadow-xl overflow-hidden">
                         <table className="w-full table-auto border-collapse bg-gradient-to-tr  text-xs text-white overflow-hidden">
                           <thead className="text-[#ffffffb7] font-light border-b uppercase border-gray-700">
                             <tr className="font-light">

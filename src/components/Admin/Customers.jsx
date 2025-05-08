@@ -48,8 +48,9 @@ const Customers = () => {
         Customers
       </div>
 
-      <div className='grid w-full md:grid-cols-12 justify-between items-center mb-5'>
-        <div className="flex justify-center col-span-9 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center mb-5 w-full">
+        {/* Search Input */}
+        <div className="col-span-12 md:col-span-9 flex justify-center md:justify-start w-full">
           <input
             type="text"
             placeholder="Search by Customer..."
@@ -61,21 +62,31 @@ const Customers = () => {
             className="p-2 w-full rounded-md bg-gray-700 text-white border outline-none border-[#ffffff2d]"
           />
         </div>
-        <div className="flex justify-center gap-4 col-span-3 w-full">
+
+        {/* Pagination Controls */}
+        <div className="col-span-12 md:col-span-3 flex justify-center md:justify-end items-center gap-4 w-full">
           <button
             onClick={handlePrevious}
             disabled={currentPage === 1}
-            className={`px-4 py-2 rounded ${currentPage === 1 ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 cursor-pointer'} text-white`}
+            className={`px-4 py-2 rounded ${
+              currentPage === 1
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            } text-white`}
           >
             Previous
           </button>
-          <span className="text-white self-center">
+          <span className="text-white">
             Page {currentPage} of {totalPages}
           </span>
           <button
             onClick={handleNext}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded ${currentPage === totalPages ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 cursor-pointer'} text-white`}
+            className={`px-4 py-2 rounded ${
+              currentPage === totalPages
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+            } text-white`}
           >
             Next
           </button>
@@ -98,17 +109,22 @@ const Customers = () => {
           <tbody>
             {currentCustomers.length > 0 ? (
               currentCustomers.map((customer, index) => (
-                <tr key={index} className="border-b border-gray-700 hover:bg-gray-800 transition">
+                <tr
+                  key={index}
+                  className="border-b border-gray-700 hover:bg-gray-800 transition"
+                >
                   <td className="px-6 py-4">{customer.name}</td>
-                  <td className="px-6 py-4">{customer.address || 'null'}</td>
+                  <td className="px-6 py-4">{customer.address || "null"}</td>
                   <td className="px-6 py-4">{customer.code}</td>
-                  <td className="px-6 py-4">{customer.place || 'null'}</td>
+                  <td className="px-6 py-4">{customer.place || "null"}</td>
                   <td className="px-6 py-4">{customer.super_code}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="px-6 py-4 text-center">No customers found.</td>
+                <td colSpan="5" className="px-6 py-4 text-center">
+                  No customers found.
+                </td>
               </tr>
             )}
           </tbody>
