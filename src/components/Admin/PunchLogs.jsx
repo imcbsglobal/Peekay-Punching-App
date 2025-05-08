@@ -3,6 +3,7 @@ import { getPunchRecords } from "../../api";
 import expired from "../../assets/expired.png"
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { MdClose } from "react-icons/md";
 
 // Format duration from { seconds }
 const formatDuration = (seconds = 0) => {
@@ -58,11 +59,14 @@ const PunchLogs = () => {
   const recordsPerPage = 9;
   const [filteredRecordss, setFilteredRecordss] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [viewImage, setViewImage] = useState(false)
+  const [selectedImage, setSelectedImage] = useState("");
 
   useEffect(() => {
     const fetchPunchRecords = async () => {
       try {
         const data = await getPunchRecords();
+        console.log("Data iS", data)
         setRecords(data.data);
         // setFilteredRecordss(records);
         // Debug logging
@@ -194,8 +198,8 @@ const PunchLogs = () => {
               >
                 <td className="px-6 py-4">
                   {/* {new Date(record.punch_date).toLocaleDateString()} */}
-                  <li key={index}>
-                    {new Date(record.punch_date).toLocaleDateString()} -{" "}
+                  <li key={index} className="list-none">
+                    {new Date(record.punch_date).toLocaleDateString()}
                     {record.punch_time}
                   </li>
                 </td>
@@ -222,19 +226,28 @@ const PunchLogs = () => {
                   {new Date(record.punch_out_date).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4">
-                  {record.total_time_spent?.seconds != null
-                    ? formatDuration(record.total_time_spent.seconds)
+                  {record.total_time_spent
+                    ? formatDuration(
+                        (record.total_time_spent.minutes || 0) * 60 +
+                          (record.total_time_spent.seconds || 0)
+                      )
                     : "Pending"}
                 </td>
 
                 <td className="px-6 py-4">
-                  {record.photo_filename ? (
+                  {record.photo_url ? (
                     <img
-                    src={`https://peekayuser.imcbs.com/uploads/${record.photo_filename}`}
+                      onClick={() => {
+                        setSelectedImage(record.photo_url);
+                        setViewImage(true);
+                      }}
+                      src={record.photo_url}
                       alt="Punch"
-                      className="rounded-full border border-cyan-500 shadow-md w-10 h-10 object-cover"
+                      className="rounded-full border border-cyan-500 shadow-md w-10 h-10 object-cover cursor-pointer"
                       onError={(e) => {
-                        console.error(`Failed to load image: ${record.photo_filename}`);
+                        console.error(
+                          `Failed to load image: ${record.photo_filename}`
+                        );
                         // Try to log the full URL that failed
                         console.error(`Full URL that failed: ${e.target.src}`);
                         e.target.src = expired;
@@ -242,7 +255,11 @@ const PunchLogs = () => {
                       }}
                     />
                   ) : (
-                    <span className="text-gray-400">No photo</span>
+                    <img
+                      src={expired}
+                      alt=""
+                      className="rounded-full border border-cyan-500 shadow-md w-10 h-10 object-cover"
+                    />
                   )}
                 </td>
               </tr>
@@ -250,6 +267,21 @@ const PunchLogs = () => {
           </tbody>
         </table>
       </div>
+      {viewImage && (
+        <div className="fixed top-0 right-0 bottom-0 left-0 h-full w-full bg-[#000000c4] z-[999] flex justify-center items-center">
+          <div
+            className="absolute top-5 right-5 text-white text-3xl cursor-pointer"
+            onClick={() => setViewImage(false)}
+          >
+            <MdClose />
+          </div>
+          <img
+            src={selectedImage}
+            alt="Preview"
+            className="max-w-full max-h-[90%] rounded-lg shadow-lg"
+          />
+        </div>
+      )}
     </div>
   );
 };
