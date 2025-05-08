@@ -11,13 +11,12 @@ const PunchInDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [currentPunchData, setCurrentPunchData] = useState(null);
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Prevent navigation when the component mounts
   useEffect(() => {
     // Block navigation using History API
     window.history.pushState(null, "", window.location.href);
-    
+
     // Handle popstate (back/forward buttons)
     const handlePopState = (e) => {
       e.preventDefault();
@@ -44,14 +43,42 @@ const PunchInDashboard = () => {
   useEffect(() => {
     const verifyPunchStatus = async () => {
       try {
+        setLoading(true);
         const pendingPunches = await punchAPI.getPendingPunches();
+        // console.log("Pending punches:", pendingPunches);
+
         if (!pendingPunches || pendingPunches.length === 0) {
+          // console.log("No pending punches found, redirecting to dashboard");
           navigate("/userDashboard", { replace: true });
-        } else {
-          setCurrentPunchData(pendingPunches[0]);
+          return;
         }
+        
+        // Ensure we have the expected data structure
+        const firstPunch = pendingPunches[0];
+        
+        // Check for ID in multiple possible locations
+        const punchId = firstPunch.id || firstPunch._id || 
+                       (firstPunch.data && (firstPunch.data.id || firstPunch.data._id));
+        
+        if (!punchId) {
+          // console.error("Invalid punch data structure:", firstPunch);
+          throw new Error("Invalid punch data received from server");
+        }
+        
+        // Store the complete punch data but ensure ID is accessible at top level
+        const normalizedPunchData = {
+          ...firstPunch,
+          id: punchId // Ensure ID is accessible at top level
+        };
+        
+        // console.log("Setting current punch data:", normalizedPunchData);
+        setCurrentPunchData(normalizedPunchData);
       } catch (error) {
-        console.error("Error verifying punch status:", error);
+        // console.error("Error verifying punch status:", error);
+        alert("Failed to load punch data. Please try again.");
+        navigate("/userDashboard", { replace: true });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -61,31 +88,40 @@ const PunchInDashboard = () => {
   const handlePunchOut = async () => {
     try {
       if (!currentPunchData) {
-        alert("No active punch-in found");
-        navigate("/userDashboard", { replace: true });
-        return;
+        throw new Error("No valid punch-in data found. Cannot punch out.");
+      }
+      
+      // Extract ID from data, checking multiple possible locations
+      const punchId = currentPunchData.id || currentPunchData._id;
+      
+      if (!punchId) {
+        // console.error("Invalid punch data:", currentPunchData);
+        throw new Error("No valid punch ID found. Cannot punch out.");
       }
 
+      setLoading(true);
+      
       const location = await punchAPI.getCurrentLocation();
-      const locationString = `${location.latitude},${location.longitude}`;
+      const locationString = punchAPI.formatLocation(location);
       const currentTime = punchAPI.getCurrentTimeISO();
       const currentDate = currentTime.split('T')[0];
-  
-      setLoading(true);
-  
+
       const punchOutData = {
-        id: currentPunchData.id || currentPunchData._id,
+        id: punchId,
         punchOutLocation: locationString,
         punchOutTime: currentTime,
-        punchOutDate: currentDate
+        punchOutDate: currentDate,
       };
-  
-      await punchAPI.punchOut(punchOutData);
+
+      // console.log("Sending punch-out data:", punchOutData);
+      const response = await punchAPI.punchOut(punchOutData);
+      // console.log("Punch-out response:", response);
+      
       alert("Punch out successful!");
       navigate("/userDashboard", { replace: true });
     } catch (error) {
-      console.error("Punch-out failed:", error);
-      alert(error.response?.data?.message || "Failed to punch out. Please try again.");
+      // console.error("Punch-out failed:", error);
+      alert(`Punch-out failed: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -96,32 +132,27 @@ const PunchInDashboard = () => {
     navigate("/login");
   };
 
+
   return (
-    <div className="overflow-x-hidden h-screen">
-      {/* Remove or disable back buttons in the UI */}
-      <div className="flex items-center justify-between pt-5">
-        {/* Remove or disable back button */}
-      </div>
+    <div className="fixed top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center px-2">
+      <div className="max-w-[700px] mx-auto bg-[#ffffff1c] py-10 px-10 rounded-3xl flex flex-col justify-center items-center">
+        <h1 className="text-4xl text-[#fff] text-center font-semibold mb-2">Punch Out</h1>
 
-      <div className="px-2">
-        <div className="flex px-2 flex-col justify-center items-center bg-[#ffffff18] py-10 rounded-3xl backdrop-blur-2xl border border-[#ffffff96]">
-          <h2 className="pt-10 text-white font-bold mb-10 text-3xl">
-            Punch Out
-          </h2>
-
-          {/* Punch Button - simplified */}
-          <div className="flex w-full justify-end items-center mt-5 px-2">
+        {loading ? (
+          <p>Loading...</p>
+        ) : currentPunchData ? (
+          <div className="punch-card">
             <button
+              className="btn-primary px-6 py-2 bg-[#f00] text-[#fff] rounded-lg font-semibold"
               onClick={handlePunchOut}
               disabled={loading}
-              className={`px-10 py-2 cursor-pointer rounded-3xl font-bold text-white bg-red-600 ${
-                loading ? "opacity-50" : ""
-              }`}
             >
-              {loading ? "Processing..." : "Punch Out"}
+              {loading ? "Processing..." : "Punch Out Now"}
             </button>
           </div>
-        </div>
+        ) : (
+          <p>No active punch-in found.</p>
+        )}
       </div>
     </div>
   );

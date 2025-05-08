@@ -67,8 +67,25 @@ export const punchAPI = {
 
   // Get pending punches for current user
   getPendingPunches: async () => {
-    const response = await api.get("/punch/pending");
-    return response.data;
+    try {
+      const response = await api.get("/punch/pending");
+      // console.log("Raw pending punches response:", response);
+      
+      // Handle different response structures
+      if (response.data && Array.isArray(response.data)) {
+        return response.data;
+      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      } else if (response.data) {
+        // If it's not an array but has data, wrap it
+        return [response.data];
+      }
+      
+      return [];
+    } catch (error) {
+      // console.error("Error fetching pending punches:", error);
+      throw error;
+    }
   },
 
   // Get completed punches for current user
@@ -78,7 +95,6 @@ export const punchAPI = {
   },
 
   // Record a punch-in
-  // Update punchIn validation in punchAPI object
   punchIn: async (punchData) => {
     // For FormData, we can't check fields directly
     if (punchData instanceof FormData) {
@@ -91,27 +107,47 @@ export const punchAPI = {
       }
     } else {
       // Original validation for JSON data
-      if (!punchData.punchInLocation || !punchData.punchInTime || 
+      if (!punchData.punchInLocation || !punchData.punchInTime ||
           !punchData.customerName || !punchData.photo) {
         throw new Error(
           "Required fields missing: punchInLocation, punchInTime, customerName and photo are required"
         );
       }
     }
-  
+
     const config = {
       headers: {
         'Content-Type': punchData instanceof FormData ? 'multipart/form-data' : 'application/json'
       }
     };
-  
-    const response = await api.post("/punch/punch-in", punchData, config);
-    return response.data;
+
+    try {
+      const response = await api.post("/punch/punch-in", punchData, config);
+      // console.log("Punch-in response:", response);
+      
+      // Store punch data in localStorage for later reference
+      if (response.data) {
+        // Extract the punch ID and ensure it's stored in a consistent format
+        const punchId = response.data.id || response.data._id || 
+                     (response.data.data && (response.data.data.id || response.data.data._id));
+        
+        // Create normalized data to store
+        const punchToStore = {
+          ...response.data,
+          id: punchId // Ensure ID is accessible at top level
+        };
+        
+        localStorage.setItem('currentPunch', JSON.stringify(punchToStore));
+      }
+      
+      return response.data;
+    } catch (error) {
+      // console.error("Punch-in API error:", error);
+      throw error;
+    }
   },
 
-
   // Record a punch-out
-  // Update punchOut validation in punchAPI object
   punchOut: async (punchData) => {
     // Validate required fields
     if (!punchData.id || !punchData.punchOutLocation || !punchData.punchOutTime) {
@@ -120,15 +156,26 @@ export const punchAPI = {
       );
     }
 
-    const formattedData = {
-      id: punchData.id,
-      punchOutTime: punchData.punchOutTime,
-      punchOutLocation: punchData.punchOutLocation,
-      punchOutDate: punchData.punchOutDate || punchAPI.getCurrentTimeISO().split('T')[0]
-    };
+    try {
+      const formattedData = {
+        id: punchData.id,
+        punchOutTime: punchData.punchOutTime,
+        punchOutLocation: punchData.punchOutLocation,
+        punchOutDate: punchData.punchOutDate || punchAPI.getCurrentTimeISO().split('T')[0]
+      };
 
-    const response = await api.post("/punch/punch-out", formattedData);
-    return response.data;
+      // console.log("Sending punch-out data:", formattedData);
+      const response = await api.post("/punch/punch-out", formattedData);
+      // console.log("Punch-out response:", response);
+      
+      // Clear stored punch data on successful punch-out
+      localStorage.removeItem('currentPunch');
+      
+      return response.data;
+    } catch (error) {
+      // console.error("Punch-out API error:", error.response || error);
+      throw error;
+    }
   },
 
   // Get current location coordinates
@@ -190,6 +237,20 @@ export const punchAPI = {
 
     return `${hours}h ${minutes}m ${remainingSeconds}s`;
   },
+  
+  // Get punch data from localStorage
+  getCurrentPunchData: () => {
+    try {
+      const storedPunch = localStorage.getItem('currentPunch');
+      if (!storedPunch) return null;
+      
+      const punchData = JSON.parse(storedPunch);
+      return punchData;
+    } catch (error) {
+      // console.error("Error retrieving stored punch data:", error);
+      return null;
+    }
+  }
 };
 
 export default {

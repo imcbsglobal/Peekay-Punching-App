@@ -169,7 +169,7 @@ const UserDashboard = () => {
   
       navigate("/PunchInDashboard", { replace: true });
     } catch (error) {
-      console.error("Punch-in failed:", error);
+      // console.error("Punch-in failed:", error);
       alert(error.message || "Failed to punch in. Please try again.");
     }
   };
