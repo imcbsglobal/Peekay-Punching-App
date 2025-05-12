@@ -21,7 +21,14 @@ const Login = () => {
       
       // Check for pending punches after login
       const pendingPunches = await punchAPI.getPendingPunches();
-      if (pendingPunches && pendingPunches.length > 0) {
+      const punchesArray = Array.isArray(pendingPunches) ? pendingPunches : [];
+      
+      const userPendingPunch = punchesArray.find(
+        punch => punch.username === response.data.id && punch.status === "PENDING"
+      );
+      
+      if (userPendingPunch) {
+        localStorage.setItem('currentPunch', JSON.stringify(userPendingPunch));
         navigate('/punchInDashboard', { replace: true });
       } else {
         navigate('/userDashboard', { replace: true });

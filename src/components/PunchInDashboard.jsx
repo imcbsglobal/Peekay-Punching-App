@@ -44,35 +44,32 @@ const PunchInDashboard = () => {
     const verifyPunchStatus = async () => {
       try {
         setLoading(true);
-        const pendingPunches = await punchAPI.getPendingPunches();
-        // console.log("Pending punches:", pendingPunches);
+        
+        // First check localStorage for existing punch data
+        const storedPunch = localStorage.getItem('currentPunch');
+        if (storedPunch) {
+          const punchData = JSON.parse(storedPunch);
+          setCurrentPunchData(punchData);
+          return;
+        }
 
-        if (!pendingPunches || pendingPunches.length === 0) {
-          // console.log("No pending punches found, redirecting to dashboard");
+        // If no stored punch, verify with server
+        const pendingPunches = await punchAPI.getPendingPunches();
+        const punchesArray = Array.isArray(pendingPunches) ? pendingPunches : [];
+        
+        const userData = JSON.parse(localStorage.getItem("userData"));
+        const userPendingPunch = punchesArray.find(
+          punch => punch.username === userData?.id && punch.status === "PENDING"
+        );
+
+        if (!userPendingPunch) {
           navigate("/userDashboard", { replace: true });
           return;
         }
         
-        // Ensure we have the expected data structure
-        const firstPunch = pendingPunches[0];
-        
-        // Check for ID in multiple possible locations
-        const punchId = firstPunch.id || firstPunch._id || 
-                       (firstPunch.data && (firstPunch.data.id || firstPunch.data._id));
-        
-        if (!punchId) {
-          // console.error("Invalid punch data structure:", firstPunch);
-          throw new Error("Invalid punch data received from server");
-        }
-        
-        // Store the complete punch data but ensure ID is accessible at top level
-        const normalizedPunchData = {
-          ...firstPunch,
-          id: punchId // Ensure ID is accessible at top level
-        };
-        
-        // console.log("Setting current punch data:", normalizedPunchData);
-        setCurrentPunchData(normalizedPunchData);
+        // Store and set the punch data
+        localStorage.setItem('currentPunch', JSON.stringify(userPendingPunch));
+        setCurrentPunchData(userPendingPunch);
       } catch (error) {
         // console.error("Error verifying punch status:", error);
         alert("Failed to load punch data. Please try again.");
