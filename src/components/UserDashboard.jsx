@@ -13,6 +13,7 @@ import { IoClose } from "react-icons/io5";
 const UserDashboard = () => {
   const [userName, setUserName] = useState("");
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [openConfirmPunchIn, setOpenConfirmPunchIn] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
@@ -139,6 +140,8 @@ const UserDashboard = () => {
         alert("Please select a customer and take a photo before punching in");
         return;
       }
+
+      setIsLoading(true); // Start loading
   
       const location = await punchAPI.getCurrentLocation();
       const locationString = `${location.latitude},${location.longitude}`;
@@ -171,6 +174,9 @@ const UserDashboard = () => {
     } catch (error) {
       // console.error("Punch-in failed:", error);
       alert(error.message || "Failed to punch in. Please try again.");
+    }
+    finally {
+      setIsLoading(false); // Stop loading regardless of success/error
     }
   };
 
@@ -362,26 +368,25 @@ const UserDashboard = () => {
           </div>
         )}
         <div className="flex justify-between px-4 w-full gap-5 mb-16">
-        <div className="">
-          <button
-            onClick={() => setOpenConfirmPunchIn(!openConfirmPunchIn)}
-            className="px-10 py-2 rounded-3xl bg-[#fff] text-[#3fab00] border border-[#3fab00] font-bold cursor-pointer"
-          >
-            Punch In
-          </button>
+          <div className="">
+            <button
+              onClick={() => setOpenConfirmPunchIn(!openConfirmPunchIn)}
+              className="px-10 py-2 rounded-3xl bg-[#fff] text-[#3fab00] border border-[#3fab00] font-bold cursor-pointer"
+            >
+              Punch In
+            </button>
+          </div>
+          <div>
+            <button
+              onClick={handleLogout}
+              className="px-10 py-2 rounded-3xl bg-[#fff] font-bold border text-[#f00] border-[#ab0000] cursor-pointer"
+            >
+              Exit
+            </button>
+          </div>
         </div>
-        <div>
-          <button
-            onClick={handleLogout}
-            className="px-10 py-2 rounded-3xl bg-[#fff] font-bold border text-[#f00] border-[#ab0000] cursor-pointer"
-          >
-            Exit
-          </button>
-        </div>
-      </div>
       </div>
 
-      
       <div className="fixed bottom-3 text-center leading-tight font-bold text-[#fff] text-sm flex justify-center items-center w-full">
         <div>
           Powered By <span className="block">IMC Business Solutions</span>
@@ -423,6 +428,21 @@ const UserDashboard = () => {
               </button>
             </div>
           </motion.div>
+        </motion.div>
+      )}
+
+      {isLoading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]"
+        >
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-white"></div>
+            <span className="text-white font-semibold">
+              Processing Punch In...
+            </span>
+          </div>
         </motion.div>
       )}
     </div>
