@@ -6,6 +6,7 @@ import { authAPI, punchAPI } from '../api';
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [client_id, setCient_Id] = useState('')
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const Login = () => {
     setLoading(true);
   
     try {
-      const response = await authAPI.login(username, password);
+      const response = await authAPI.login(username, password,client_id);
       localStorage.setItem("userData", JSON.stringify(response.data));
       
       // Check for pending punches after login
@@ -64,6 +65,13 @@ const Login = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className="bg-[#fff] px-5 py-2 rounded-3xl border-none outline-none"
+          />
+          <input
+            type="text"
+            placeholder="client id"
+            value={client_id}
+            onChange={(e) => setCient_Id(e.target.value)}
             className="bg-[#fff] px-5 py-2 rounded-3xl border-none outline-none"
           />
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-2">

@@ -38,8 +38,8 @@ api.interceptors.response.use(
 
 // Auth API endpoints
 export const authAPI = {
-  login: async (id, password) => {
-    const response = await api.post("/auth/login", { id, password });
+  login: async (id, password, client_id) => {
+    const response = await api.post("/auth/login", { id, password, client_id });
     // Store token after successful login
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
@@ -62,6 +62,7 @@ export const punchAPI = {
   // Get customers for dropdown list
   getCustomers: async () => {
     const response = await api.get("/punch/customers");
+    console.log("data is", response)
     return response.data;
   },
 
