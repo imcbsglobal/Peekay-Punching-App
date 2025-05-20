@@ -135,7 +135,7 @@ const AdminConsole = () => {
                   <tr className="font-light">
                     <th className="px-6 py-4">Date</th>
                     <th className="px-6 py-4">User</th>
-                    <th className="px-6 py-4">Client ID</th>
+                    {/* <th className="px-6 py-4">Client ID</th> */}
                     <th className="px-6 py-4">Customer Name</th>
                     <th className="px-6 py-4">Punch In Time</th>
                     <th className="px-6 py-4">Punch In Location</th>
@@ -160,7 +160,7 @@ const AdminConsole = () => {
                         </li>
                       </td>
                       <td className="px-6 py-4">{record.username || "N/A"}</td>
-                      <td className="px-6 py-4">{record.client_id || "N/A"}</td>
+                      {/* <td className="px-6 py-4">{record.client_id || "N/A"}</td> */}
                       <td className="px-6 py-4">
                         {record.customer_name || "N/A"}
                       </td>
