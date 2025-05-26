@@ -101,7 +101,7 @@ const AdminConsole = () => {
             <div className="w-full h-[150px] bg-[#ffffff13] text-[#fff] border border-[#EEB31B] rounded-3xl flex flex-col justify-center items-center gap-2">
               <div className="text-2xl font-semibold">Total Users</div>
               <div className="flex justify-center items-center gap-2  text-3xl">
-                <FaUser className="text-[#EEB31B]" />{" "}
+                <FaUser className="text-[#EEB31B]" />
                 <span className="font-bold">{userCount}</span>
               </div>
             </div>
