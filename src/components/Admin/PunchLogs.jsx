@@ -67,6 +67,14 @@ const PunchLogs = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [viewImage, setViewImage] = useState(false)
   const [selectedImage, setSelectedImage] = useState("");
+  const [userName, setUserName] = useState("");
+
+
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("user_name");
+    setUserName(storedUsername || "Admin");
+  }, []);
+  
 
   useEffect(() => {
     const fetchPunchRecords = async () => {
@@ -147,7 +155,7 @@ const PunchLogs = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Punch Logs");
 
-    XLSX.writeFile(workbook, "Punch_Logs.xlsx");
+    XLSX.writeFile(workbook, `Punch_Logs_${userName}.xlsx`);
   };
 
 
@@ -220,8 +228,7 @@ const PunchLogs = () => {
     },
     margin: { left: 10, right: 10 },
   });
-
-  doc.save("Punch_Logs.pdf");
+  doc.save(`Punch_Logs_${userName}.pdf`);
 };
 
 
