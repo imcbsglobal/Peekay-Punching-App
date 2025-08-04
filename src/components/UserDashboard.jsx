@@ -1,22 +1,12 @@
-<<<<<<< HEAD
-import React from "react";
-=======
 import React, { useState, useEffect, useRef } from "react";
->>>>>>> 1036023994783d47007bf4f7a3f587251f636550
 import pkLogo from "../assets/pklogo.png";
 import { FaAngleLeft } from "react-icons/fa6";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { FaUser } from "react-icons/fa";
-<<<<<<< HEAD
-
-const UserDashboard = () => {
-  return (
-    <div className="h-screen w-full px-2 relative overflow-hidden">
-=======
 import { useNavigate } from "react-router-dom";
 import { authAPI, punchAPI } from "../api";
 import { IoMdClose } from "react-icons/io";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 import { LuCamera } from "react-icons/lu";
 import { IoClose } from "react-icons/io5";
 
@@ -36,13 +26,10 @@ const UserDashboard = () => {
   const streamRef = useRef(null);
 
   const filteredCustomers = customers.filter((customer) =>
-    
     (customer.name || customer.customerName || "")
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
-  // console.log("Customer Address",customers.customer)
-
 
   useEffect(() => {
     // Get user data from localStorage
@@ -55,9 +42,11 @@ const UserDashboard = () => {
     const fetchCustomers = async () => {
       try {
         const response = await punchAPI.getCustomers();
-        // console.log("Customers List",response)
-        const customersArray = Array.isArray(response) ? response : 
-                           Array.isArray(response.data) ? response.data : [];
+        const customersArray = Array.isArray(response)
+          ? response
+          : Array.isArray(response.data)
+          ? response.data
+          : [];
         setCustomers(customersArray);
       } catch (error) {
         alert("Failed to load customers. Please try again.");
@@ -67,7 +56,7 @@ const UserDashboard = () => {
     fetchCustomers();
   }, []);
 
-  // Camera effects and functions (same as PunchInDashboard)
+  // Camera effects and functions
   useEffect(() => {
     if (showCamera) {
       startCamera();
@@ -110,38 +99,42 @@ const UserDashboard = () => {
   const capturePhoto = () => {
     const video = videoRef.current;
     if (!video) return;
-  
+
     const canvas = document.createElement("canvas");
     const width = video.videoWidth;
     const height = video.videoHeight;
-  
+
     canvas.width = width;
     canvas.height = height;
-  
+
     const ctx = canvas.getContext("2d");
-  
+
     if (facingMode === "user") {
       ctx.translate(width, 0);
       ctx.scale(-1, 1);
     }
-  
+
     ctx.drawImage(video, 0, 0, width, height);
-  
+
     // Convert canvas to blob
-    canvas.toBlob((blob) => {
-      // Create a File object from the blob
-      const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-      
-      // Create a local URL for preview
-      const imageUrl = URL.createObjectURL(blob);
-      
-      setCapturedImage({
-        url: imageUrl,
-        file: file
-      });
-      
-      setShowCamera(false);
-    }, "image/jpeg", 0.8);
+    canvas.toBlob(
+      (blob) => {
+        // Create a File object from the blob
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+
+        // Create a local URL for preview
+        const imageUrl = URL.createObjectURL(blob);
+
+        setCapturedImage({
+          url: imageUrl,
+          file: file,
+        });
+
+        setShowCamera(false);
+      },
+      "image/jpeg",
+      0.8
+    );
   };
 
   const handlePunchIn = async () => {
@@ -152,40 +145,43 @@ const UserDashboard = () => {
       }
 
       setIsLoading(true); // Start loading
-  
+
       const location = await punchAPI.getCurrentLocation();
       const locationString = `${location.latitude},${location.longitude}`;
       const currentTime = punchAPI.getCurrentTimeISO();
-      const currentDate = currentTime.split('T')[0];
-      
+      const currentDate = currentTime.split("T")[0];
+
       // Create FormData object
       const formData = new FormData();
-      formData.append('punchInTime', currentTime);
-      formData.append('punchInLocation', locationString);
-      formData.append('customerName', selectedCustomer);
-      formData.append('photo', capturedImage.file);
-      formData.append('punchDate', currentDate);
-      formData.append('status', 'IN');
-  
+      formData.append("punchInTime", currentTime);
+      formData.append("punchInLocation", locationString);
+      formData.append("customerName", selectedCustomer);
+      formData.append("photo", capturedImage.file);
+      formData.append("punchDate", currentDate);
+      formData.append("status", "IN");
+
       // Verify all required fields are present
-      if (!currentTime || !locationString || !selectedCustomer || !capturedImage.file) {
+      if (
+        !currentTime ||
+        !locationString ||
+        !selectedCustomer ||
+        !capturedImage.file
+      ) {
         throw new Error("All required fields must be filled");
       }
-  
+
       const response = await punchAPI.punchIn(formData);
-      
+
       if (response && response.data) {
-        localStorage.setItem('currentPunch', JSON.stringify(response.data));
+        localStorage.setItem("currentPunch", JSON.stringify(response.data));
       } else {
-        localStorage.setItem('currentPunch', JSON.stringify(response));
+        localStorage.setItem("currentPunch", JSON.stringify(response));
       }
-  
+
       navigate("/PunchInDashboard", { replace: true });
     } catch (error) {
-      // console.error("Punch-in failed:", error);
       alert(error.message || "Failed to punch in. Please try again.");
-    }
-    finally {
+    } finally {
       setIsLoading(false); // Stop loading regardless of success/error
     }
   };
@@ -195,45 +191,16 @@ const UserDashboard = () => {
     navigate("/login", { replace: true });
     window.location.reload(); // Prevent blank page issue
   };
-  
 
   return (
     <div className="h-screen w-full px-2 relative overflow-x-hidden">
->>>>>>> 1036023994783d47007bf4f7a3f587251f636550
       <div className="flex items-center justify-between pt-5">
-        <a href="/login">
-          <div className="text-[#fff] text-3xl cursor-pointer">
-            <FaAngleLeft />
-          </div>
-        </a>
-<<<<<<< HEAD
-        <a href="/">
-          <div className="text-[#fff] text-3xl cursor-pointer">
-            <RiLogoutBoxLine />
-          </div>
-        </a>
-      </div>
-      <div className="flex flex-col justify-center items-center w-full px-2">
-        <div className="w-[150px] mb-5 pt-28">
-          <img src={pkLogo} alt="" className="w-full h-full object-contain" />
+        <div
+          onClick={() => navigate("/login")}
+          className="text-[#fff] text-3xl cursor-pointer"
+        >
+          <FaAngleLeft />
         </div>
-        <div className="text-[#fff] font-semibold mb-6 w-full flex items-center gap-2 px-4 py-2 rounded-full bg-[#ffffff1d]">
-          <span className=" bg-[#ffffff30] rounded-full p-2 text-xl">
-            <FaUser />
-          </span>{" "}
-          Hi, Sajith Thomas
-        </div>
-        <div className="flex justify-between gap-5">
-          <div className="">
-            <a href="/PunchInDashboard">
-              <button className="px-10 py-2 rounded-3xl bg-[#fff] text-[#3fab00] border border-[#3fab00] font-bold cursor-pointer">
-                Punch In
-              </button>
-            </a>
-          </div>
-          <div>
-            <button className="px-10 py-2 rounded-3xl bg-[#fff] font-bold border text-[#f00] border-[#ab0000] cursor-pointer">
-=======
         <div
           onClick={handleLogout}
           className="text-[#fff] text-3xl cursor-pointer"
@@ -241,6 +208,7 @@ const UserDashboard = () => {
           <RiLogoutBoxLine />
         </div>
       </div>
+
       <div className="flex flex-col justify-center items-center w-full px-2 max-w-[700px] mx-auto">
         <div className="w-[150px] mb-5 pt-10">
           <img src={pkLogo} alt="" className="w-full h-full object-contain" />
@@ -254,7 +222,7 @@ const UserDashboard = () => {
       </div>
 
       <div className="max-w-[700px] mx-auto">
-        {/* Add Customer Selection */}
+        {/* Customer Selection */}
         <div className="flex mt-5 flex-col md:flex-row justify-center items-center gap-5 mb-5 w-full px-4">
           <div className="text-white whitespace-nowrap hidden md:block">
             Customer :
@@ -309,7 +277,7 @@ const UserDashboard = () => {
           </div>
         </div>
 
-        {/* Add Photo Capture */}
+        {/* Photo Capture */}
         <div className="flex justify-end items-center gap-5 w-full px-3 mb-5">
           <div className="text-white">Image :</div>
           <div
@@ -356,7 +324,7 @@ const UserDashboard = () => {
           </motion.div>
         )}
 
-        {/* Camera Modal (same as PunchInDashboard) */}
+        {/* Camera Modal */}
         {showCamera && (
           <div className="fixed left-0 right-0 top-0 bottom-0 inset-0 bg-black flex items-center justify-center z-50  backdrop-blur-2xl w-full">
             <div className="bg-gray-800 p-4 rounded-lg w-full relative h-[100vh]">
@@ -406,6 +374,8 @@ const UserDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Action Buttons */}
         <div className="flex justify-between px-4 w-full gap-5 mb-16">
           <div className="">
             <button
@@ -420,25 +390,20 @@ const UserDashboard = () => {
               onClick={handleLogout}
               className="px-10 py-2 rounded-3xl bg-[#fff] font-bold border text-[#f00] border-[#ab0000] cursor-pointer"
             >
->>>>>>> 1036023994783d47007bf4f7a3f587251f636550
               Exit
             </button>
           </div>
         </div>
       </div>
-<<<<<<< HEAD
-      <div className="absolute bottom-3 text-center leading-tight font-bold text-[#fff] text-sm flex justify-center items-center w-full">
-=======
 
+      {/* Footer */}
       <div className="fixed bottom-3 text-center leading-tight font-bold text-[#fff] text-sm flex justify-center items-center w-full">
->>>>>>> 1036023994783d47007bf4f7a3f587251f636550
         <div>
           Powered By <span className="block">IMC Business Solutions</span>
         </div>
       </div>
-<<<<<<< HEAD
-=======
-      {/* Confirm PunchIn */}
+
+      {/* Confirm PunchIn Modal */}
       {openConfirmPunchIn && (
         <motion.div className="fixed top-0 bottom-0 left-0 right-0 bg-[#00000060] backdrop-blur-xl flex flex-col justify-center items-center px-2">
           <motion.div
@@ -448,10 +413,10 @@ const UserDashboard = () => {
               opacity: 1,
               transition: { duration: 0.9, ease: "backInOut" },
             }}
-            className="max-w-[600px] w-full h-[150px] bg-[#fff2] rounded-3xl"
+            className="max-w-[600px] w-full h-[150px] bg-[#fff2] rounded-3xl relative"
           >
             <div
-              className="absolute right-5 pt-5 text-[#fff]"
+              className="absolute right-5 pt-5 text-[#fff] cursor-pointer"
               onClick={() => setOpenConfirmPunchIn(!openConfirmPunchIn)}
             >
               <IoMdClose />
@@ -463,12 +428,14 @@ const UserDashboard = () => {
               <button
                 className="px-5 py-2 bg-[#1faa00] rounded-md text-[#fff] font-semibold"
                 onClick={handlePunchIn}
+                disabled={isLoading}
               >
-                Punch In
+                {isLoading ? "Processing..." : "Punch In"}
               </button>
               <button
                 className="bg-[#f00] px-5 py-2 font-semibold rounded-md text-[#fff]"
                 onClick={() => setOpenConfirmPunchIn(!openConfirmPunchIn)}
+                disabled={isLoading}
               >
                 Cancel
               </button>
@@ -477,6 +444,7 @@ const UserDashboard = () => {
         </motion.div>
       )}
 
+      {/* Loading Modal */}
       {isLoading && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -491,13 +459,8 @@ const UserDashboard = () => {
           </div>
         </motion.div>
       )}
->>>>>>> 1036023994783d47007bf4f7a3f587251f636550
     </div>
   );
 };
 
-<<<<<<< HEAD
 export default UserDashboard;
-=======
-export default UserDashboard;
->>>>>>> 1036023994783d47007bf4f7a3f587251f636550
